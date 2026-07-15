@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KompoScan — Kenal Pasti Sisa, Selamatkan Alam</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KompoScan">
+<meta name="theme-color" content="#1B7A3D">
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -117,6 +124,16 @@
   /* ═══ SCANNER ═══ */
   #hal-scan .kad{padding:10px}
   .scanner{position:relative;border-radius:18px;overflow:hidden;background:#0c130e;width:100%;height:min(74vh,720px)}
+  .btn-skrin{
+    position:absolute;top:12px;right:12px;z-index:6;
+    background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:12px;
+    padding:9px 13px;font-size:1.15rem;cursor:pointer;
+  }
+  .scanner.penuh{
+    position:fixed;inset:0;z-index:80;
+    height:100vh;height:100dvh;max-height:none;border-radius:0;
+  }
+  body.skrin-penuh{overflow:hidden}
   .scanner video,.scanner canvas.paparan{width:100%;height:100%;object-fit:cover;display:block}
   .bingkai{position:absolute;inset:7%;pointer-events:none}
   .bingkai i{position:absolute;width:44px;height:44px;border:6px solid var(--hijau-neon);border-radius:8px}
@@ -309,6 +326,7 @@
         <div class="garis-scan"></div>
         <div class="status-scan"><span class="titik" id="titik"></span><span id="statusScan">Model belum dimuatkan</span></div>
         <div class="bar-yakin"><div id="barYakin"></div></div>
+        <button class="btn-skrin" id="btnPenuh" title="Mod skrin penuh (kiosk)">⛶</button>
         <div class="overlay-keputusan" id="overlayKeputusan">
           <div class="ikon-besar" id="ikonBesar">✓</div>
           <div class="label" id="labelKeputusan"></div>
@@ -713,6 +731,20 @@ function hentiScan(){
   statusScan.textContent='Scan dihentikan';
   document.getElementById('barYakin').style.width='0%';
 }
+
+/* ── Mod skrin penuh (kiosk) ── */
+document.getElementById('btnPenuh').addEventListener('click',()=>{
+  const s=document.getElementById('scanner');
+  const penuh=s.classList.toggle('penuh');
+  document.body.classList.toggle('skrin-penuh',penuh);
+  document.getElementById('btnPenuh').textContent=penuh?'✕':'⛶';
+  document.getElementById('btnPenuh').title=penuh?'Keluar skrin penuh':'Mod skrin penuh (kiosk)';
+  if(penuh && !scanning) document.getElementById('btnScan').click();
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && document.getElementById('scanner').classList.contains('penuh'))
+    document.getElementById('btnPenuh').click();
+});
 
 async function gelung(){
   while(scanning){
