@@ -284,6 +284,40 @@
   .langkah small{display:block;color:#5a544a;font-size:.78rem;margin-top:2px;line-height:1.45}
   #qrWrap{display:flex;justify-content:center;padding:12px 0}
 
+  /* ═══ CHATBOT SI CACING ═══ */
+  .fab{
+    position:fixed;right:16px;bottom:96px;z-index:70;
+    width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;
+    background:var(--hijau);color:#fff;font-size:1.7rem;
+    box-shadow:0 6px 18px rgba(14,82,40,.4);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .fab:active{transform:scale(.94)}
+  .chat-panel{
+    position:fixed;right:0;bottom:0;left:0;z-index:115;
+    max-width:520px;margin:0 auto;height:min(78vh,640px);
+    background:#fff;border-radius:24px 24px 0 0;
+    box-shadow:0 -8px 32px rgba(0,0,0,.25);
+    transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.9,.3,1);
+    display:flex;flex-direction:column;
+  }
+  .chat-panel.buka{transform:none}
+  .chat-kepala{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #E2EFE6}
+  .chat-kepala .mask{width:42px;height:42px;border-radius:50%;background:var(--hijau-muda);display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+  .chat-kepala b{color:var(--hijau-gelap)}
+  .chat-kepala small{display:block;font-size:.68rem;color:var(--kelabu)}
+  .chat-kepala .tutup-chat{margin-left:auto;background:var(--hijau-muda);color:var(--hijau-gelap);border-radius:50%;width:34px;height:34px;padding:0;font-size:1rem}
+  .chat-mesej{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--krem)}
+  .buih{max-width:84%;padding:10px 14px;border-radius:16px;font-size:.86rem;line-height:1.55}
+  .buih.bot{background:#fff;border:1px solid #E2EFE6;align-self:flex-start;border-bottom-left-radius:4px}
+  .buih.user{background:var(--hijau);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  .chip-baris{display:flex;gap:6px;overflow-x:auto;padding:8px 12px;border-top:1px solid #E2EFE6;scrollbar-width:none}
+  .chip-baris::-webkit-scrollbar{display:none}
+  .chip-soalan{flex:0 0 auto;background:var(--hijau-muda);color:var(--hijau-gelap);font-size:.72rem;font-weight:bold;border:none;border-radius:99px;padding:7px 12px;cursor:pointer}
+  .chat-input{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid #E2EFE6}
+  .chat-input input{flex:1}
+  .chat-input button{flex:0 0 auto;background:var(--hijau);color:#fff;border-radius:12px;padding:0 18px}
+
   .toast{
     position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);
     background:var(--hijau-gelap);color:#fff;font-size:.85rem;font-weight:bold;
@@ -539,6 +573,22 @@
     <div id="qrWrap"></div>
     <p style="font-size:.78rem;color:var(--kelabu)">Screenshot, cetak & tampal di tong kompos dan dinding kantin — sesiapa scan terus buka app!</p>
     <button class="b-putih b-penuh" style="margin-top:12px" id="btnQrTutup">Tutup</button>
+  </div>
+</div>
+
+<!-- Chatbot Si Cacing -->
+<button class="fab" id="btnChat" title="Tanya Si Cacing">🪱</button>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-kepala">
+    <div class="mask">🪱</div>
+    <div><b>Si Cacing</b><small>Pakar kompos &amp; tanaman KompoScan</small></div>
+    <button class="tutup-chat" id="btnChatTutup" aria-label="Tutup">✕</button>
+  </div>
+  <div class="chat-mesej" id="chatMesej"></div>
+  <div class="chip-baris" id="chipBaris"></div>
+  <div class="chat-input">
+    <input type="text" id="chatInput" placeholder="Tanya apa-apa tentang kompos & tanaman..." maxlength="200">
+    <button id="btnChatHantar">➤</button>
   </div>
 </div>
 
@@ -1387,6 +1437,165 @@ function toast(msg){
   toastTimer=setTimeout(()=>t.classList.remove('buka'),2800);
 }
 function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+
+/* ═══════════════ CHATBOT SI CACING (pangkalan ilmu tempatan) ═══════════════ */
+const BOT_KB=[
+ {k:['hai','hello','helo','salam','apa khabar'],
+  j:'Hai! 🪱 Saya <b>Si Cacing</b>, pakar kompos & tanaman KompoScan. Tanya saya apa-apa — tentang bahan kompos, bau, suhu, cara guna baja, atau tanaman kebun sekolah!'},
+
+ {k:['apa itu kompos','maksud kompos','apakah kompos','kenapa kompos'],
+  j:'🌱 <b>Kompos</b> ialah baja semula jadi hasil pereputan sisa organik (sisa makanan, daun) oleh berjuta-juta mikrob. Kenapa penting? Sisa makanan di tapak pelupusan menghasilkan gas metana — 25× lebih teruk daripada CO₂. Dengan kompos, sisa kantin kita bertukar jadi "emas hitam" untuk kebun sekolah!'},
+
+ {k:['bahan hijau','bahan perang','beza hijau','hijau dan perang','hijau vs perang','apa itu hijau','apa itu perang'],
+  j:'🟢 <b>Bahan HIJAU</b> = kaya nitrogen (protein untuk mikrob): sisa buah, sayur, nasi, kulit pisang, uncang teh.<br><br>🟤 <b>Bahan PERANG</b> = kaya karbon (tenaga untuk mikrob): daun kering, kertas koyak, kulit telur hancur, hampas kelapa, habuk kayu.<br><br>⚖️ Resipi rahsia: <b>1 bahagian hijau : 2-3 bahagian perang</b>. Hijau tanpa perang = busuk. Perang tanpa hijau = lambat reput.'},
+
+ {k:['nisbah','ratio','berapa bahagian'],
+  j:'⚖️ Nisbah ideal: <b>1 hijau : 2-3 perang</b> (ikut isipadu). Cara mudah di sekolah: setiap kali masukkan sisa makanan, tutup dengan <b>2 genggam daun kering</b>. Meter nisbah dalam tab Baja akan pantau untuk anda — kalau bar terlalu hijau, sistem beri amaran!'},
+
+ {k:['bau','busuk','berbau','hapak'],
+  j:'👃 Kompos sihat berbau macam <b>tanah hutan</b> — kalau busuk, maksudnya tiada oksigen (anaerobik). Penawar segera:<br>1️⃣ Kacau timbunan sampai gebu<br>2️⃣ Tambah banyak bahan perang (daun kering)<br>3️⃣ Pastikan lubang udara tong tak tersumbat<br>4️⃣ Semak tiada daging/minyak termasuk<br><br>Pencegahan: SELALU tutup sisa baharu dengan selimut daun kering. Itu 80% daripada rahsia elak bau!'},
+
+ {k:['lalat','ulat','larva','serangga'],
+  j:'🪰 Lalat datang bila sisa terdedah. Penyelesaian: <b>benamkan</b> sisa ke tengah timbunan (jangan letak atas) dan tutup dengan bahan perang. Ulat putih (larva) sebenarnya <b>membantu</b> reputan — tak berbahaya, tapi kalau terlalu banyak, tanda sisa terdedah. Nota: ulat gemuk kelabu (black soldier fly) adalah kawan kompos terbaik!'},
+
+ {k:['tikus','haiwan','kucing','anjing','biawak'],
+  j:'🐀 Tikus tertarik pada daging, ikan, tulang & makanan bermasak berminyak — sebab tu KompoScan menolaknya di pintu scan! Pastikan juga: tong bertutup rapat, sisa dibenamkan ke tengah, dan tapak tong jauh sedikit dari stor makanan. Tong dengan dasar berjaring dawai halus adalah pertahanan terbaik.'},
+
+ {k:['semut'],
+  j:'🐜 Semut = tanda kompos <b>terlalu kering</b>. Renjis air sehingga lembap macam span diperah dan kacau — semut akan berpindah sendiri. Semut tak merosakkan kompos, cuma penanda keadaan.'},
+
+ {k:['suhu','panas','sejuk','degre','darjah'],
+  j:'🌡️ Suhu ialah penunjuk kesihatan #1 kompos:<br>• <b>40-65°C</b> = sempurna! Mikrob bekerja kuat (fasa termofilik), benih rumpai & kuman mati<br>• <b>&lt;35°C</b> = sejuk, mikrob mengantuk → tambah bahan hijau & kacau<br>• <b>&gt;70°C</b> = terlalu panas, mikrob baik pun mati → kacau & renjis air<br><br>Rekod bacaan dalam tab Baja (butang 🌡️) dan saya pantau untuk anda!'},
+
+ {k:['lembap','basah','kering','air','siram','renjis'],
+  j:'💧 Ujian genggam: ambil segenggam kompos dan perah —<br>• Keluar 1-2 titis air = <b>sempurna</b> (macam span diperah) ✅<br>• Menitik banyak = terlalu basah → tambah bahan perang & kacau<br>• Berderai kering = terlalu kering → renjis air & kacau<br><br>Sasaran: 50-60% kelembapan. Mikrob perlu air untuk hidup, tapi lemas kalau banjir!'},
+
+ {k:['kacau','balik','gaul','aduk','terbalik'],
+  j:'🔄 Kacau = beri <b>oksigen</b> kepada mikrob. Jadual: <b>seminggu sekali</b>, guna cangkul kecil atau kayu, terbalikkan dari tengah ke tepi. Tanda perlu kacau segera: berbau, berkelompok padat, atau berasap terlalu panas. App akan ingatkan hari kacau setiap minggu melalui dashboard & Telegram!'},
+
+ {k:['bila siap','berapa lama','tempoh','tanda siap','dah siap','matang'],
+  j:'⏳ Tempoh ikut kaedah: tong biasa <b>~8 minggu</b>, kompos kerap dikacau <b>~6 minggu</b>, vermikompos (cacing) <b>~4 minggu</b>.<br><br>3 tanda kompos SIAP:<br>1️⃣ Warna coklat gelap kehitaman<br>2️⃣ Berbau tanah hutan yang wangi<br>3️⃣ Bahan asal tak dikenali lagi (kulit pisang dah "hilang")<br><br>App kira tarikh siap automatik untuk setiap batch! 🌼'},
+
+ {k:['cara guna','guna baja','pakai baja','sudu baja','banyak mana baja'],
+  j:'🌼 Cara guna kompos siap:<br>• <b>Campuran tanah pasu:</b> 1 kompos : 3 tanah<br>• <b>Pokok sedia ada:</b> tabur 2-3 cm di keliling pangkal (jangan kena batang), siram<br>• <b>Batas sayur:</b> gaul 1 baldi kompos semeter persegi sebelum menanam<br>• <b>Semaian benih:</b> ayak halus dulu, campur 1:1 dengan tanah<br><br>Kompos tak "membakar" pokok macam baja kimia — selamat digunakan lebih!'},
+
+ {k:['tanam apa','tanaman sesuai','pokok apa','sayur apa','kebun sekolah'],
+  j:'🥬 Tanaman terbaik untuk kebun sekolah dengan kompos:<br>• <b>Paling mudah & cepat:</b> sawi, bayam, kangkung (30-40 hari boleh tuai!)<br>• <b>Menarik untuk murid:</b> cili, tomato, bendi (nampak berbuah)<br>• <b>Herba berguna:</b> serai, pandan, kunyit, misai kucing<br>• <b>Bunga:</b> bunga matahari, marigold (halau serangga perosak!)<br><br>Kompos kaya kalium dari kulit pisang sangat bagus untuk cili & tomato. 🌶️'},
+
+ {k:['cara tanam cili','tanam cili'],
+  j:'🌶️ Cili dengan kompos KompoScan:<br>1️⃣ Semai biji dalam tray (tanah:kompos 1:1), 7-10 hari bercambah<br>2️⃣ Bila 4-5 helai daun, pindah ke pasu/batas<br>3️⃣ Tabur kompos keliling pangkal setiap 2 minggu<br>4️⃣ Siram pagi, tempat cahaya penuh<br>5️⃣ Berbunga ~2 bulan, cili merah ~3 bulan!<br><br>Kulit pisang dalam kompos = kalium = buah lebat 💪'},
+
+ {k:['cara tanam sawi','tanam sawi','tanam bayam','tanam kangkung'],
+  j:'🥬 Sayur daun (sawi/bayam/kangkung) — paling sesuai untuk projek murid sebab CEPAT:<br>1️⃣ Sedia batas: gaul kompos 1 baldi semeter persegi<br>2️⃣ Tabur biji jarang-jarang, tutup nipis dengan kompos ayak<br>3️⃣ Siram pagi & petang (jangan banjir)<br>4️⃣ Jarangkan anak pokok bila sesak<br>5️⃣ Tuai dalam 30-40 hari! 🎉<br><br>Sayur daun suka nitrogen — kompos kaya bahan hijau sangat sesuai.'},
+
+ {k:['cacing','vermi','vermikompos'],
+  j:'🪱 <b>Vermikompos</b> = kompos guna cacing (spesies terbaik: African Nightcrawler / cacing tiger merah — bukan cacing tanah biasa). Kelebihan: siap dalam 4 minggu sahaja dan hasilnya "vermicast" — baja paling premium! Cacing makan separuh berat badannya SETIAP HARI. Jaga: jangan panas (bawah 30°C, letak teduh), jangan bahan masam berlebihan (limau), pastikan lembap. Sesuai jadi projek kelas!'},
+
+ {k:['bokashi'],
+  j:'🥡 <b>Bokashi</b> = penapaian sisa guna dedak ber-mikrob EM dalam baldi kedap udara. Kelebihan besar: boleh terima nasi berlauk, sedikit daging & makanan bermasak — yang kompos biasa tolak! Proses: lapis sisa + tabur dedak bokashi + tekan padat + tutup rapat, 2 minggu tapai, kemudian tanam dalam tanah 2 minggu lagi. Bau macam jeruk (bukan busuk). Sesuai jadi Fasa 2 KompoScan untuk tangani sisa berkuah!'},
+
+ {k:['air kompos','air hitam','leachate','teh kompos'],
+  j:'🫖 Air yang menitik dari tong ("leachate") boleh digunakan tapi MESTI dicairkan: <b>1 bahagian air kompos : 10 bahagian air</b>, siram terus ke tanah (bukan atas daun). Kalau berbau sangat busuk, jangan guna terus — buang ke tanah kosong. "Teh kompos" sebenar dibuat dengan merendam kompos SIAP dalam air 24 jam — itu lebih selamat untuk pokok.'},
+
+ {k:['hujan','musim hujan','banjir'],
+  j:'🌧️ Musim hujan: pastikan tong <b>bertutup</b> dan tidak menakung — kompos banjir jadi anaerobik & busuk. Tip: tambah lebih bahan perang minggu hujan, letak tong atas bata (tidak duduk atas takungan), dan pastikan lubang saliran bawah tak tersumbat.'},
+
+ {k:['selamat','bahaya','sarung tangan','kuman','basuh tangan'],
+  j:'🧤 Keselamatan murid semasa kendalikan kompos:<br>1️⃣ Pakai sarung tangan getah<br>2️⃣ Basuh tangan dengan sabun selepas — WAJIB<br>3️⃣ Jangan hidu dalam-dalam debu kompos kering<br>4️⃣ Luka di tangan? Jangan pegang kompos hari tu<br><br>Kompos matang yang sihat selamat dikendalikan — amalan kebersihan asas dah cukup.'},
+
+ {k:['mula','tong','tempat','lokasi','bina tong'],
+  j:'🏗️ Mula kompos sekolah:<br>1️⃣ <b>Tong:</b> tong dram/bekas 60-100L, tebuk lubang udara di sisi & saliran di bawah<br>2️⃣ <b>Lokasi:</b> teduh (bawah pokok), atas tanah, dekat kantin tapi jauh dari kelas<br>3️⃣ <b>Lapisan asas:</b> ranting kasar di bawah (saliran), kemudian daun kering<br>4️⃣ Sedia baldi daun kering di sebelah — "selimut perang" sentiasa sedia<br>5️⃣ Cipta batch dalam tab Baja & mula scan! 🌱'},
+
+ {k:['status batch','batch saya','baja saya','status baja','status kompos'],
+  j:()=>{
+    if(DB.batches.length===0) return '📦 Belum ada batch baja lagi — cipta yang pertama di tab Baja! Saya akan pantau perkembangannya untuk anda.';
+    const hariIni=new Date().toISOString().slice(0,10);
+    return '📦 Status batch anda:<br>'+DB.batches.map(b=>{
+      const jum=b.bahan.reduce((s,x)=>s+x.berat,0);
+      if(b.status==='selesai') return '• <b>'+esc(b.nama)+'</b> — ✅ selesai dituai ('+jum.toFixed(2)+' kg)';
+      const baki=hariAntara(hariIni,b.siap);
+      return baki<=0
+        ? '• <b>'+esc(b.nama)+'</b> — 🌼 SUDAH MATANG, sedia dituai! ('+jum.toFixed(2)+' kg)'
+        : '• <b>'+esc(b.nama)+'</b> — 🌱 '+baki+' hari lagi ('+jum.toFixed(2)+' kg)';
+    }).join('<br>');
+  }},
+
+ {k:['berapa berat','jumlah berat','berapa kg','jumlah kg','dah kumpul'],
+  j:()=>'⚖️ Setakat ini program KompoScan telah mengitar <b>'+DB.stat.totalKg.toFixed(2)+' kg</b> sisa makanan menjadi baja! Itu '+DB.stat.totalKg.toFixed(2)+' kg yang TIDAK pergi ke tapak pelupusan. Syabas! 🎉'},
+
+ {k:['terima kasih','tq','thanks','tqvm'],
+  j:'Sama-sama! 🪱💚 Jumpa lagi — dan jangan lupa selimut perang atas sisa baharu ya!'},
+];
+
+function botJawab(soalan){
+  const t=soalan.toLowerCase();
+  // 1. Semak soalan tentang makanan spesifik (guna pangkalan ILMU)
+  const makanan=semakMakananBot(t);
+  if(makanan) return makanan;
+  // 2. Padan dengan pangkalan ilmu
+  for(const item of BOT_KB){
+    if(item.k.some(kw=>t.includes(kw))) return typeof item.j==='function'?item.j():item.j;
+  }
+  // 3. Fallback
+  return '🤔 Maaf, saya tak pasti tentang itu. Cuba tanya saya tentang:<br>• Bahan boleh/tak boleh kompos (cth: "boleh kompos nasi?")<br>• Bau, suhu, lembapan, kacau<br>• Bila kompos siap & cara guna baja<br>• Tanaman kebun sekolah (cili, sawi...)<br>• Status batch saya';
+}
+
+function semakMakananBot(t){
+  const takBoleh=[['daging','Daging'],['ayam','Ayam'],['ikan','Ikan'],['tulang','Tulang'],['santan','Makanan bersantan'],['minyak','Makanan berminyak'],['goreng','Makanan bergoreng/berminyak'],['susu','Susu/tenusu'],['keju','Keju'],['plastik','Plastik'],['polistirena','Polistirena'],['styrofoam','Polistirena'],['tisu','Tisu berminyak']];
+  for(const [kw,nm] of takBoleh){
+    if(t.includes(kw)) return '❌ <b>'+nm+'</b> TIDAK boleh dikompos. '+cariIlmu(kw,false).sebab+'<br><br>🗑️ Buang ke tong biasa ya!';
+  }
+  for(const k in ILMU){
+    if(!k.startsWith('_') && t.includes(k)){
+      const il=ILMU[k];
+      return '✅ <b>'+k.charAt(0).toUpperCase()+k.slice(1)+'</b> BOLEH dikompos! '+(il.kat==='hijau'?'🟢 Bahan hijau (nitrogen)':'🟤 Bahan perang (karbon)')+' — reput dalam '+il.reput+'.<br><br>💡 '+il.tip;
+    }
+  }
+  if(t.includes('nasi')) { const il=ILMU['sisa nasi']; return '✅ <b>Nasi</b> BOLEH dikompos — tapi sedikit sahaja. 💡 '+il.tip; }
+  return null;
+}
+
+/* ── UI chatbot ── */
+const chatPanel=document.getElementById('chatPanel');
+const chatMesej=document.getElementById('chatMesej');
+const CHIP_SOALAN=['Macam mana elak bau?','Bahan hijau vs perang?','Bila kompos siap?','Boleh kompos nasi?','Status batch saya','Tanam apa dengan baja ni?','Suhu berapa yang sihat?'];
+
+document.getElementById('btnChat').addEventListener('click',()=>{
+  chatPanel.classList.add('buka');
+  if(chatMesej.children.length===0){
+    tambahBuih('bot','Hai! 🪱 Saya <b>Si Cacing</b>, pakar kompos & tanaman KompoScan. Tanya saya apa-apa, atau pilih soalan di bawah! 👇');
+  }
+});
+document.getElementById('btnChatTutup').addEventListener('click',()=>chatPanel.classList.remove('buka'));
+
+const chipBaris=document.getElementById('chipBaris');
+CHIP_SOALAN.forEach(s=>{
+  const c=document.createElement('button');
+  c.className='chip-soalan'; c.textContent=s;
+  c.addEventListener('click',()=>hantarSoalan(s));
+  chipBaris.appendChild(c);
+});
+
+document.getElementById('btnChatHantar').addEventListener('click',()=>{
+  const v=document.getElementById('chatInput').value.trim();
+  if(v) hantarSoalan(v);
+});
+document.getElementById('chatInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){ const v=e.target.value.trim(); if(v) hantarSoalan(v); }
+});
+
+function hantarSoalan(s){
+  document.getElementById('chatInput').value='';
+  tambahBuih('user',esc(s));
+  setTimeout(()=>tambahBuih('bot',botJawab(s)),350);
+}
+function tambahBuih(jenis,html){
+  const d=document.createElement('div');
+  d.className='buih '+jenis;
+  d.innerHTML=html;
+  chatMesej.appendChild(d);
+  chatMesej.scrollTop=chatMesej.scrollHeight;
+}
 
 /* Mula */
 paparDashboard(); paparBatch();
