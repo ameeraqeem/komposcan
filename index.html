@@ -15,6 +15,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root{
     --hijau:#1B7A3D;
@@ -263,6 +264,26 @@
   .kosong{text-align:center;color:var(--kelabu);font-size:.85rem;padding:20px 10px}
   .kosong .i{font-size:2.4rem;display:block;margin-bottom:6px}
 
+  /* ═══ NISBAH HIJAU:PERANG & MODAL ═══ */
+  .bar-nisbah{display:flex;height:12px;border-radius:99px;overflow:hidden;margin-top:10px;background:#EEE}
+  .bar-nisbah .h{background:#4CAF50}
+  .bar-nisbah .p{background:#8D6E63}
+  .label-nisbah{display:flex;justify-content:space-between;font-size:.68rem;color:var(--kelabu);margin-top:4px}
+  .amaran-nisbah{font-size:.76rem;margin-top:8px;padding:9px 11px;border-radius:10px;line-height:1.45}
+  .amaran-nisbah.bahaya{background:var(--merah-muda);color:var(--merah)}
+  .amaran-nisbah.awas{background:#FFF8E1;color:#7a5c00}
+  .amaran-nisbah.ok{background:var(--hijau-muda);color:var(--hijau-gelap)}
+  .sensor-baris{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .modal{position:fixed;inset:0;background:rgba(10,25,15,.5);z-index:110;display:none;align-items:center;justify-content:center;padding:18px}
+  .modal.buka{display:flex}
+  .modal .isi{background:#fff;border-radius:20px;padding:20px;max-width:430px;width:100%;max-height:86vh;overflow-y:auto}
+  .modal h3{color:var(--hijau-gelap);font-size:1.05rem;margin-bottom:8px;display:flex;gap:8px;align-items:center}
+  .langkah{display:flex;gap:12px;margin-top:12px;align-items:flex-start}
+  .langkah .no{flex:0 0 32px;height:32px;border-radius:50%;background:var(--hijau-muda);color:var(--hijau);display:flex;align-items:center;justify-content:center;font-weight:bold}
+  .langkah b{font-size:.9rem}
+  .langkah small{display:block;color:#5a544a;font-size:.78rem;margin-top:2px;line-height:1.45}
+  #qrWrap{display:flex;justify-content:center;padding:12px 0}
+
   .toast{
     position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);
     background:var(--hijau-gelap);color:#fff;font-size:.85rem;font-weight:bold;
@@ -443,6 +464,10 @@
       <button class="b-putih b-penuh" style="margin-top:8px" id="btnLogKeluar">🚪 Log Keluar Admin</button>
     </div>
     <div class="kad">
+      <h2>📱 QR Code</h2>
+      <button class="b-hijau b-penuh" id="btnQR">Papar QR Code App</button>
+    </div>
+    <div class="kad">
       <h2>🗑️ Data</h2>
       <button class="b-merah b-penuh" id="btnReset">Padam semua data aplikasi</button>
     </div>
@@ -485,6 +510,38 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Modal panduan langkah selepas tambah bahan -->
+<div class="modal" id="panduanModal">
+  <div class="isi">
+    <h3>📋 Langkah Seterusnya</h3>
+    <div id="panduanIsi"></div>
+    <button class="b-hijau b-penuh" style="margin-top:16px" id="btnPanduanTutup">✅ Dah Buat!</button>
+  </div>
+</div>
+
+<!-- Modal bacaan sensor tong -->
+<div class="modal" id="sensorModal">
+  <div class="isi">
+    <h3>🌡️ Rekod Bacaan Tong Kompos</h3>
+    <label>Suhu timbunan (°C)</label>
+    <input type="number" id="sensorSuhu" step="0.1" placeholder="cth: 48">
+    <label>Kelembapan (%) — pilihan</label>
+    <input type="number" id="sensorLembapan" step="1" min="0" max="100" placeholder="cth: 55">
+    <button class="b-hijau b-penuh" style="margin-top:14px" id="btnSimpanSensor">💾 Simpan Bacaan</button>
+    <button class="b-putih b-penuh" style="margin-top:8px" id="btnSensorTutup">Tutup</button>
+  </div>
+</div>
+
+<!-- Modal QR code -->
+<div class="modal" id="qrModal">
+  <div class="isi" style="text-align:center">
+    <h3 style="justify-content:center">📱 QR Code KompoScan</h3>
+    <div id="qrWrap"></div>
+    <p style="font-size:.78rem;color:var(--kelabu)">Screenshot, cetak & tampal di tong kompos dan dinding kantin — sesiapa scan terus buka app!</p>
+    <button class="b-putih b-penuh" style="margin-top:12px" id="btnQrTutup">Tutup</button>
+  </div>
+</div>
+
 <nav>
   <button data-hal="utama" class="aktif"><span class="ikon">🏠</span>Utama</button>
   <button data-hal="scan"><span class="ikon">📷</span>Scan</button>
@@ -506,8 +563,9 @@ const storan = {
    memuatkannya secara automatik tanpa perlu tetapan di setiap device */
 const URL_TM_LALAI = "https://teachablemachine.withgoogle.com/models/Ips1IVVZ5/";
 
-let DB = { batches:[], stat:{totalKg:0,kompos:0,tong:0,scanIkutTarikh:{}}, urlTM:URL_TM_LALAI, ambang:0.85, pin:btoa('1234'), urlGAS:'https://script.google.com/macros/s/AKfycbzaY2o9BPRCs4gvBsb3Lb6kbwDoWBRGwEdwFbQg_U44yPvhziJUkRJ0P9OFGyZH0tuC/exec' };
+let DB = { batches:[], stat:{totalKg:0,kompos:0,tong:0,scanIkutTarikh:{}}, urlTM:URL_TM_LALAI, ambang:0.85, pin:btoa('1234'), urlGAS:'https://script.google.com/macros/s/AKfycbzaY2o9BPRCs4gvBsb3Lb6kbwDoWBRGwEdwFbQg_U44yPvhziJUkRJ0P9OFGyZH0tuC/exec', sensor:{} };
 try{ const d=storan.get('komposcan'); if(d) DB = Object.assign(DB, JSON.parse(d)); }catch(e){}
+DB.sensor = DB.sensor || {};
 function simpan(){ storan.set('komposcan', JSON.stringify(DB)); }
 
 /* ═══════════════ DATABASE GOOGLE SHEETS (Apps Script) ═══════════════ */
@@ -530,7 +588,7 @@ async function gasSegerak(senyap){
       hariSiap:parseInt(b.hariSiap)||56,
       status:String(b.status||'aktif'),
       bahan:(j.bahan||[]).filter(x=>String(x.batchId)===String(b.id))
-        .map(x=>({nama:String(x.nama||''),berat:parseFloat(x.berat)||0,tarikh:String(x.tarikh).slice(0,10)}))
+        .map(x=>({nama:String(x.nama||''),berat:parseFloat(x.berat)||0,tarikh:String(x.tarikh).slice(0,10),kategori:String(x.kategori||'hijau')}))
     }));
     DB.stat.totalKg=DB.batches.reduce((s,b)=>s+b.bahan.reduce((t,x)=>t+x.berat,0),0);
     simpan(); paparBatch(); paparDashboard();
@@ -917,9 +975,10 @@ document.getElementById('btnMasukBatch').addEventListener('click',()=>{
   const idB=document.getElementById('popupBatch').value;
   const nama=document.getElementById('popupNama').textContent;
   if(!idB){ toast('⚠️ Cipta batch baja dahulu di tab Baja!'); return; }
-  tambahBahan(idB, nama, berat);
+  const hasil=tambahBahan(idB, nama, berat);
   tutupPopup();
   toast(`🌱 ${nama} (${berat.toFixed(2)} kg) ditambah ke baja!`);
+  if(hasil) bukaPanduan(nama, hasil.kategori, hasil.b);
 });
 
 /* ═══════════════ MICRO:BIT LOAD CELL (Web Bluetooth UART) ═══════════════ */
@@ -972,9 +1031,10 @@ document.getElementById('btnTambahBerat').addEventListener('click',()=>{
   if(!idB){ toast('⚠️ Cipta batch baja dahulu di tab Baja!'); return; }
   if(beratSemasa<=0){ toast('⚠️ Tiada bacaan berat.'); return; }
   const nama=document.getElementById('namaBahanTimbang').value.trim()||'Sisa makanan';
-  tambahBahan(idB,nama,beratSemasa);
+  const hasil=tambahBahan(idB,nama,beratSemasa);
   toast(`⚖️ ${nama} (${beratSemasa.toFixed(2)} kg) ditambah!`);
   document.getElementById('namaBahanTimbang').value='';
+  if(hasil) bukaPanduan(nama, hasil.kategori, hasil.b);
 });
 
 /* ═══════════════ BATCH BAJA ═══════════════ */
@@ -999,13 +1059,104 @@ document.getElementById('btnCipta').addEventListener('click',()=>{
 });
 
 function tambahBahan(idB,nama,berat){
-  const b=DB.batches.find(x=>x.id===idB); if(!b) return;
+  const b=DB.batches.find(x=>x.id===idB); if(!b) return null;
+  const kategori=(cariIlmu(nama,true).kat==='perang')?'perang':'hijau';
   const tarikh=new Date().toISOString().slice(0,10);
-  b.bahan.push({nama,berat,tarikh});
+  b.bahan.push({nama,berat,tarikh,kategori});
   DB.stat.totalKg+=berat;
   simpan(); paparBatch(); paparDashboard();
-  gasPost('bahan',{batchId:idB,batchNama:b.nama,nama,berat,tarikh});
+  gasPost('bahan',{batchId:idB,batchNama:b.nama,nama,berat,tarikh,kategori});
+  return {b,kategori};
 }
+
+/* ═══════════════ NISBAH HIJAU:PERANG (ilmu kompos) ═══════════════ */
+function kiraNisbah(b){
+  let h=0,p=0;
+  b.bahan.forEach(x=>{ x.kategori==='perang' ? p+=x.berat : h+=x.berat; });
+  const jum=h+p;
+  return {h,p,jum,pctH:jum?Math.round(h/jum*100):0};
+}
+function nasihatNisbah(n){
+  if(n.jum===0) return null;
+  if(n.pctH>=70) return {tahap:'bahaya',msg:'⚠️ '+n.pctH+'% bahan hijau — terlalu banyak! Tambah bahan perang (daun kering / kertas koyak) SEKARANG, jika tidak batch ini akan berbau.'};
+  if(n.pctH>=55) return {tahap:'awas',msg:'🟡 '+n.pctH+'% bahan hijau — mula pincang. Tambah segenggam dua daun kering setiap kali masukkan sisa baharu.'};
+  if(n.pctH<=20 && n.jum>1) return {tahap:'awas',msg:'🟤 Terlalu banyak bahan perang — reput akan perlahan. Boleh tambah lebih sisa hijau.'};
+  return {tahap:'ok',msg:'✅ Nisbah hijau:perang seimbang — teruskan!'};
+}
+
+/* ═══════════════ NASIHAT SENSOR (suhu & lembapan) ═══════════════ */
+function nasihatSensor(s){
+  const m=[];
+  if(s.suhu!=='' && s.suhu!=null && !isNaN(parseFloat(s.suhu))){
+    const t=parseFloat(s.suhu);
+    if(t<35) m.push({tahap:'awas',msg:'🥶 '+t+'°C — timbunan sejuk, mikrob kurang aktif. Tambah bahan hijau & kacau untuk hidupkannya.'});
+    else if(t<=65) m.push({tahap:'ok',msg:'🔥 '+t+'°C — suhu sihat (fasa aktif), mikrob sedang bekerja!'});
+    else m.push({tahap:'bahaya',msg:'⚠️ '+t+'°C — terlalu panas! Kacau timbunan segera & renjis sedikit air.'});
+  }
+  if(s.lembapan!=='' && s.lembapan!=null && !isNaN(parseFloat(s.lembapan))){
+    const l=parseFloat(s.lembapan);
+    if(l<40) m.push({tahap:'awas',msg:'🏜️ Lembapan '+l+'% — terlalu kering. Renjis air sehingga lembap seperti span diperah.'});
+    else if(l<=65) m.push({tahap:'ok',msg:'💧 Lembapan '+l+'% — sesuai.'});
+    else m.push({tahap:'bahaya',msg:'🌊 Lembapan '+l+'% — terlalu basah, risiko busuk anaerobik. Tambah bahan perang & kacau.'});
+  }
+  return m;
+}
+
+/* ═══════════════ PANDUAN LANGKAH SELEPAS TAMBAH BAHAN ═══════════════ */
+function bukaPanduan(nama,kategori,b){
+  const isi=document.getElementById('panduanIsi');
+  const n=kiraNisbah(b), ns=nasihatNisbah(n);
+  const langkah = kategori==='perang' ? [
+    ['Gaul rata','Masukkan '+esc(nama)+' dan gaul dengan lapisan atas timbunan supaya sebati.'],
+    ['Semak lembapan','Kompos patut lembap seperti span diperah — jika kering, renjis sedikit air.'],
+    ['Tutup tong','Tutup penutup tong; pastikan lubang udara tidak tersumbat.']
+  ] : [
+    ['Potong kecil','Potong atau koyak '+esc(nama)+' kecil-kecil — lebih kecil, lebih cepat reput.'],
+    ['Korek & benam','Korek lubang di tengah timbunan dan benamkan sisa ke dalam.'],
+    ['Selimut perang','Tutup sisa dengan 2 genggam bahan perang (daun kering / kertas koyak). Ini rahsia elak bau & lalat!'],
+    ['Tutup tong','Tutup penutup tong rapat. Kacau menyeluruh cukup seminggu sekali.']
+  ];
+  isi.innerHTML = langkah.map((l,i)=>
+    `<div class="langkah"><div class="no">${i+1}</div><div><b>${l[0]}</b><small>${l[1]}</small></div></div>`
+  ).join('') + (ns?`<div class="amaran-nisbah ${ns.tahap}" style="margin-top:14px">${ns.msg}</div>`:'');
+  document.getElementById('panduanModal').classList.add('buka');
+}
+document.getElementById('btnPanduanTutup').addEventListener('click',()=>
+  document.getElementById('panduanModal').classList.remove('buka'));
+
+/* ═══════════════ MODAL SENSOR ═══════════════ */
+let sensorBatchId=null;
+function bukaSensor(id){
+  sensorBatchId=id;
+  document.getElementById('sensorSuhu').value='';
+  document.getElementById('sensorLembapan').value='';
+  document.getElementById('sensorModal').classList.add('buka');
+}
+document.getElementById('btnSensorTutup').addEventListener('click',()=>
+  document.getElementById('sensorModal').classList.remove('buka'));
+document.getElementById('btnSimpanSensor').addEventListener('click',()=>{
+  const suhu=document.getElementById('sensorSuhu').value.trim();
+  const lembapan=document.getElementById('sensorLembapan').value.trim();
+  if(suhu==='' && lembapan===''){ toast('⚠️ Masukkan sekurang-kurangnya satu bacaan.'); return; }
+  const b=DB.batches.find(x=>x.id===sensorBatchId); if(!b) return;
+  if(!DB.sensor[sensorBatchId]) DB.sensor[sensorBatchId]=[];
+  DB.sensor[sensorBatchId].push({tarikh:new Date().toISOString().slice(0,10),suhu,lembapan});
+  simpan(); paparBatch();
+  gasPost('sensor',{batchNama:b.nama,suhu,lembapan});
+  document.getElementById('sensorModal').classList.remove('buka');
+  toast('🌡️ Bacaan disimpan!');
+});
+
+/* ═══════════════ QR CODE ═══════════════ */
+document.getElementById('btnQR').addEventListener('click',()=>{
+  if(typeof QRCode==='undefined'){ toast('⚠️ Pustaka QR belum dimuatkan. Semak internet.'); return; }
+  const w=document.getElementById('qrWrap');
+  w.innerHTML='';
+  new QRCode(w,{text:location.href,width:220,height:220,colorDark:'#0E5228',colorLight:'#FFFFFF'});
+  document.getElementById('qrModal').classList.add('buka');
+});
+document.getElementById('btnQrTutup').addEventListener('click',()=>
+  document.getElementById('qrModal').classList.remove('buka'));
 
 function formatT(iso){
   const bulan=['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogo','Sep','Okt','Nov','Dis'];
@@ -1029,30 +1180,52 @@ function paparBatch(){
     const sediaTuai = hariIni>=b.siap;
     let status=b.status;
     if(status==='aktif' && sediaTuai) status='sedia';
-    // Tarikh kacau seterusnya: setiap 7 hari dari mula
     const kacauKe=Math.floor(lalu/7)+1;
     const tKacau=new Date(b.mula); tKacau.setDate(tKacau.getDate()+kacauKe*7);
     const labelStatus = status==='selesai'?'SELESAI ✓':(status==='sedia'?'SEDIA DITUAI! 🌼':'AKTIF 🌱');
     const kelasStatus = status==='selesai'?'selesai':(status==='sedia'?'sedia':'aktif');
+
+    // Meter nisbah hijau:perang
+    const n=kiraNisbah(b);
+    const ns=nasihatNisbah(n);
+
+    // Bacaan sensor terakhir + nasihat
+    const log=DB.sensor[b.id]||[];
+    const bacaan=log[log.length-1];
+    let sensorHTML='';
+    if(bacaan){
+      sensorHTML='<div class="sensor-baris">'
+        +(bacaan.suhu!==''?`<span class="cip">🌡️ ${esc(bacaan.suhu)}°C</span>`:'')
+        +(bacaan.lembapan!==''?`<span class="cip">💧 ${esc(bacaan.lembapan)}%</span>`:'')
+        +`<span class="cip">🕐 ${formatT(bacaan.tarikh)}</span></div>`
+        +nasihatSensor(bacaan).map(m=>`<div class="amaran-nisbah ${m.tahap}">${m.msg}</div>`).join('');
+    }
 
     const d=document.createElement('div'); d.className='batch';
     d.innerHTML=`
       <div class="kepala"><b>${esc(b.nama)}</b><span class="status-b ${kelasStatus}">${labelStatus}</span></div>
       <div class="progress"><div style="width:${status==='selesai'?100:prog}%"></div></div>
       <div class="tarikh"><span>Mula: ${formatT(b.mula)}</span><span>Siap: ${formatT(b.siap)}</span></div>
+      ${n.jum>0?`
+      <div class="bar-nisbah"><div class="h" style="width:${n.pctH}%"></div><div class="p" style="width:${100-n.pctH}%"></div></div>
+      <div class="label-nisbah"><span>🟢 Hijau ${n.h.toFixed(2)} kg (${n.pctH}%)</span><span>🟤 Perang ${n.p.toFixed(2)} kg</span></div>
+      ${ns?`<div class="amaran-nisbah ${ns.tahap}">${ns.msg}</div>`:''}`:''}
+      ${sensorHTML}
       <div class="meta">
         <span class="cip">⚖️ ${jumlah.toFixed(2)} kg</span>
         <span class="cip">🥕 ${b.bahan.length} bahan</span>
         ${status==='aktif'?`<span class="cip">🔄 Kacau: ${formatT(tKacau.toISOString().slice(0,10))}</span>`:''}
         ${status==='sedia'?`<span class="cip" style="background:var(--kuning);color:#5d4400">🌼 Boleh guna di kebun!</span>`:''}
       </div>
-      ${b.bahan.length?`<div class="bahan-senarai">${b.bahan.slice(-4).map(x=>`• ${esc(x.nama)} — ${x.berat.toFixed(2)} kg (${formatT(x.tarikh)})`).join('<br>')}${b.bahan.length>4?'<br>…dan '+(b.bahan.length-4)+' lagi':''}</div>`:''}
+      ${b.bahan.length?`<div class="bahan-senarai">${b.bahan.slice(-4).map(x=>`• ${x.kategori==='perang'?'🟤':'🟢'} ${esc(x.nama)} — ${x.berat.toFixed(2)} kg (${formatT(x.tarikh)})`).join('<br>')}${b.bahan.length>4?'<br>…dan '+(b.bahan.length-4)+' lagi':''}</div>`:''}
       <div class="butang-baris">
-        ${status!=='selesai'?`<button class="b-hijau" data-tuai="${b.id}">🌼 Tandakan Dituai</button>`:''}
-        <button class="b-merah" data-padam="${b.id}">🗑️ Padam</button>
+        ${status!=='selesai'?`<button class="b-putih" data-sensor="${b.id}">🌡️ Bacaan</button>`:''}
+        ${status!=='selesai'?`<button class="b-hijau" data-tuai="${b.id}">🌼 Dituai</button>`:''}
+        <button class="b-merah" data-padam="${b.id}">🗑️</button>
       </div>`;
     wrap.appendChild(d);
   });
+  wrap.querySelectorAll('[data-sensor]').forEach(x=>x.addEventListener('click',()=>bukaSensor(x.dataset.sensor)));
   wrap.querySelectorAll('[data-tuai]').forEach(x=>x.addEventListener('click',()=>{
     const b=DB.batches.find(y=>y.id===x.dataset.tuai); b.status='selesai'; simpan(); paparBatch();
     gasPost('status',{id:b.id,status:'selesai'});
@@ -1142,11 +1315,11 @@ document.getElementById('btnExcel').addEventListener('click',()=>{
   XLSX.utils.book_append_sheet(wb,ws2,"Batch Baja");
 
   // Helaian 3: Butiran Bahan
-  const h=[["Bil.","Batch","Bahan","Berat (kg)","Tarikh Ditambah"]];
+  const h=[["Bil.","Batch","Bahan","Kategori","Berat (kg)","Tarikh Ditambah"]];
   let n=1;
-  DB.batches.forEach(x=>x.bahan.forEach(y=>h.push([n++,x.nama,y.nama,+y.berat.toFixed(2),formatT(y.tarikh)])));
+  DB.batches.forEach(x=>x.bahan.forEach(y=>h.push([n++,x.nama,y.nama,y.kategori==='perang'?'Perang (karbon)':'Hijau (nitrogen)',+y.berat.toFixed(2),formatT(y.tarikh)])));
   const ws3=XLSX.utils.aoa_to_sheet(h);
-  ws3['!cols']=[{wch:5},{wch:26},{wch:24},{wch:11},{wch:16}];
+  ws3['!cols']=[{wch:5},{wch:26},{wch:22},{wch:17},{wch:11},{wch:16}];
   XLSX.utils.book_append_sheet(wb,ws3,"Butiran Bahan");
 
   // Helaian 4: Rekod Scan Harian
@@ -1186,7 +1359,7 @@ function paparDashboard(){
 /* ═══════════════ LAIN-LAIN ═══════════════ */
 document.getElementById('btnReset').addEventListener('click',()=>{
   if(!confirm('Padam SEMUA data (batch, statistik)? Tindakan ini tidak boleh diundur.')) return;
-  DB={batches:[],stat:{totalKg:0,kompos:0,tong:0,scanIkutTarikh:{}},urlTM:DB.urlTM,ambang:DB.ambang,pin:DB.pin,urlGAS:DB.urlGAS};
+  DB={batches:[],stat:{totalKg:0,kompos:0,tong:0,scanIkutTarikh:{}},urlTM:DB.urlTM,ambang:DB.ambang,pin:DB.pin,urlGAS:DB.urlGAS,sensor:{}};
   simpan(); paparBatch(); paparDashboard(); toast('🗑️ Semua data dipadam.');
 });
 
