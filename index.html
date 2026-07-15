@@ -1345,6 +1345,22 @@ function paparDashboard(){
   const tindakan=[];
   const sedia=DB.batches.filter(b=>b.status==='aktif' && hariIni>=b.siap);
   sedia.forEach(b=>tindakan.push(`<div class="tindakan"><span class="i">🌼</span><span><b>${esc(b.nama)}</b> sudah matang — boleh dituai dan digunakan di kebun sekolah!</span></div>`));
+
+  // Amaran nisbah & sensor untuk batch aktif — naik ke dashboard utama
+  DB.batches.filter(b=>b.status!=='selesai').forEach(b=>{
+    const ns=nasihatNisbah(kiraNisbah(b));
+    if(ns && ns.tahap!=='ok'){
+      tindakan.push(`<div class="tindakan"><span class="i">${ns.tahap==='bahaya'?'⚠️':'🟡'}</span><span><b>${esc(b.nama)}</b>: ${ns.msg}</span></div>`);
+    }
+    const log=DB.sensor[b.id]||[];
+    const bacaan=log[log.length-1];
+    if(bacaan){
+      nasihatSensor(bacaan).filter(m=>m.tahap!=='ok').forEach(m=>
+        tindakan.push(`<div class="tindakan"><span class="i">🌡️</span><span><b>${esc(b.nama)}</b>: ${m.msg}</span></div>`)
+      );
+    }
+  });
+
   DB.batches.filter(b=>b.status==='aktif' && hariIni<b.siap).slice(0,2).forEach(b=>{
     const baki=hariAntara(hariIni,b.siap);
     tindakan.push(`<div class="tindakan"><span class="i">⏳</span><span><b>${esc(b.nama)}</b>: ${baki} hari lagi sebelum siap. Jangan lupa kacau setiap minggu!</span></div>`);
