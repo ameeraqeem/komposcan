@@ -146,6 +146,28 @@
   }
   .scanner.jalan .bar-yakin{display:block}
   .bar-yakin div{height:100%;width:0%;background:var(--hijau-neon);border-radius:99px;transition:width .2s}
+
+  /* Overlay keputusan glowing terus dalam kamera */
+  .overlay-keputusan{
+    position:absolute;inset:0;z-index:5;display:none;
+    flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  }
+  .overlay-keputusan.buka{display:flex;animation:popMasuk .25s ease}
+  .overlay-keputusan.ya{background:rgba(14,82,40,.55)}
+  .overlay-keputusan.tidak{background:rgba(127,23,16,.55)}
+  @keyframes popMasuk{from{opacity:0;transform:scale(1.06)}to{opacity:1;transform:scale(1)}}
+  .ikon-besar{
+    width:150px;height:150px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:4.8rem;font-weight:bold;color:#fff;
+  }
+  .ikon-besar.ya{background:radial-gradient(circle at 35% 30%,#8BE06A,var(--hijau-terang) 55%,var(--hijau-gelap));animation:glowHijau .9s infinite alternate}
+  .ikon-besar.tidak{background:radial-gradient(circle at 35% 30%,#FF8A80,var(--merah) 55%,#7f1710);animation:glowMerah .9s infinite alternate}
+  .overlay-keputusan .label{
+    font-size:1.1rem;font-weight:bold;color:#fff;text-align:center;
+    background:rgba(0,0,0,.4);padding:10px 22px;border-radius:18px;max-width:86%;
+  }
+  .overlay-keputusan .label small{display:block;font-weight:normal;font-size:.8rem;margin-top:4px;opacity:.95}
   .nota{background:var(--merah-muda);color:var(--merah);border-radius:14px;padding:12px;font-size:.8rem;display:none;margin-top:10px}
   .nota.info{background:var(--hijau-muda);color:var(--hijau-gelap)}
 
@@ -287,14 +309,19 @@
         <div class="garis-scan"></div>
         <div class="status-scan"><span class="titik" id="titik"></span><span id="statusScan">Model belum dimuatkan</span></div>
         <div class="bar-yakin"><div id="barYakin"></div></div>
+        <div class="overlay-keputusan" id="overlayKeputusan">
+          <div class="ikon-besar" id="ikonBesar">✓</div>
+          <div class="label" id="labelKeputusan"></div>
+        </div>
       </div>
       <div style="display:flex;gap:10px;margin-top:12px">
         <button class="b-hijau" style="flex:1" id="btnScan">▶️ Mula Scan</button>
+        <button class="b-putih" style="flex:0 0 auto" id="btnFrame" title="Simpan frame untuk training">📸</button>
         <button class="b-putih" style="flex:0 0 auto" id="btnUpload">🖼️</button>
         <button class="b-putih" id="btnBunyi" style="flex:0 0 auto">🔊</button>
       </div>
       <input type="file" id="failGambar" accept="image/*" style="display:none">
-      <p style="font-size:.7rem;color:var(--kelabu);text-align:center;margin-top:8px">🖼️ = semak dari gambar sedia ada (galeri/screenshot)</p>
+      <p style="font-size:.7rem;color:var(--kelabu);text-align:center;margin-top:8px">📸 = simpan frame untuk training TM &nbsp;·&nbsp; 🖼️ = semak dari gambar sedia ada</p>
       <div class="nota" id="notaScan"></div>
     </div>
   </section>
@@ -457,7 +484,11 @@ const storan = {
   get(k){ try{ return localStorage.getItem(k) ?? this._mem[k] ?? null; }catch(e){ return this._mem[k] ?? null; } },
   set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} this._mem[k]=v; }
 };
-let DB = { batches:[], stat:{totalKg:0,kompos:0,tong:0,scanIkutTarikh:{}}, urlTM:'', ambang:0.85, pin:btoa('1234'), urlGAS:'https://script.google.com/macros/s/AKfycbzaY2o9BPRCs4gvBsb3Lb6kbwDoWBRGwEdwFbQg_U44yPvhziJUkRJ0P9OFGyZH0tuC/exec' };
+/* ⭐ URL MODEL TEACHABLE MACHINE — tampal di sini supaya SEMUA peranti
+   memuatkannya secara automatik tanpa perlu tetapan di setiap device */
+const URL_TM_LALAI = "https://teachablemachine.withgoogle.com/models/Ips1IVVZ5/";
+
+let DB = { batches:[], stat:{totalKg:0,kompos:0,tong:0,scanIkutTarikh:{}}, urlTM:URL_TM_LALAI, ambang:0.85, pin:btoa('1234'), urlGAS:'https://script.google.com/macros/s/AKfycbzaY2o9BPRCs4gvBsb3Lb6kbwDoWBRGwEdwFbQg_U44yPvhziJUkRJ0P9OFGyZH0tuC/exec' };
 try{ const d=storan.get('komposcan'); if(d) DB = Object.assign(DB, JSON.parse(d)); }catch(e){}
 function simpan(){ storan.set('komposcan', JSON.stringify(DB)); }
 
@@ -691,34 +722,80 @@ async function gelung(){
 }
 
 async function ramal(){
-  if(!model || video.videoWidth===0) return;
+  if(!model || video.videoWidth===0 || overlayAktif) return;
   const hasil = await model.predict(video);
   hasil.sort((a,b)=>b.probability-a.probability);
   const top = hasil[0];
+  const kedua = hasil[1] ? hasil[1].probability : 0;
   document.getElementById('barYakin').style.width = Math.round(top.probability*100)+'%';
 
   const namaKelas = top.className.trim();
   const namaUpper = namaKelas.toUpperCase();
-  if(top.probability < DB.ambang || namaUpper.startsWith('TIADA')){
+  // Tolak jika: keyakinan rendah, kelas TIADA, atau AI "teragak-agak"
+  // (beza kelas #1 dan #2 terlalu kecil = objek samar, bukan padanan jelas)
+  if(top.probability < DB.ambang || namaUpper.startsWith('TIADA') || (top.probability - kedua) < 0.25){
     statusScan.textContent='Mencari sisa makanan... 👀';
     calonNama=null; calonKira=0;
+    itemPopupSemasa=null; // item dah dialih — benarkan item sama discan semula
     return;
   }
   statusScan.textContent = namaKelas+' ('+Math.round(top.probability*100)+'%)';
 
-  // Perlu 3 frame berturut-turut kelas sama — elak keputusan melompat
+  // Perlu 5 frame berturut-turut kelas sama — elak keputusan melompat
   if(namaKelas===calonNama){ calonKira++; } else { calonNama=namaKelas; calonKira=1; }
-  if(calonKira>=3 && namaKelas!==itemPopupSemasa){
+  if(calonKira>=5 && namaKelas!==itemPopupSemasa){
     itemPopupSemasa=namaKelas;
     const boleh = namaUpper.startsWith('BOLEH');
     const namaBersih = namaKelas.replace(/^(BOLEH|TIDAK)\s*[-–:]\s*/i,'').trim() || namaKelas;
     rekodScan(boleh,namaBersih);
-    bukaPopup(namaBersih, boleh);
+    paparKeputusanScan(namaBersih, boleh);
   }
+}
+
+/* ── Overlay keputusan dalam kamera: papar 2.6 saat, auto sambung scan ── */
+let overlayAktif=false, overlayTimer=null;
+function paparKeputusanScan(nama, boleh){
+  overlayAktif=true;
+  bunyikan(boleh?'ya':'tidak');
+  if(navigator.vibrate) navigator.vibrate(boleh?[80]:[60,60,60]);
+  const o=document.getElementById('overlayKeputusan');
+  const ik=document.getElementById('ikonBesar');
+  const lb=document.getElementById('labelKeputusan');
+  ik.className='ikon-besar '+(boleh?'ya':'tidak');
+  ik.textContent=boleh?'✓':'✕';
+  lb.innerHTML=boleh
+    ? esc(nama)+'<small>🌱 Boleh kompos — masukkan ke tong kompos!</small>'
+    : esc(nama)+'<small>🗑️ Tidak boleh — buang ke tong biasa ya!</small>';
+  o.className='overlay-keputusan buka '+(boleh?'ya':'tidak');
+  clearTimeout(overlayTimer);
+  overlayTimer=setTimeout(()=>{
+    o.className='overlay-keputusan';
+    overlayAktif=false;
+    calonNama=null; calonKira=0;
+    statusScan.textContent='Mencari sisa makanan... 👀';
+  },2600);
 }
 
 /* ═══════════════ SEMAK DARI GAMBAR UPLOAD ═══════════════ */
 const imgUpload=document.getElementById('imgUpload');
+
+/* ── Simpan frame kamera untuk training TM (kitaran update harian) ── */
+document.getElementById('btnFrame').addEventListener('click',()=>{
+  if(video.videoWidth===0){ toast('⚠️ Mulakan kamera dahulu (tekan Mula Scan).'); return; }
+  const c=document.createElement('canvas');
+  c.width=video.videoWidth; c.height=video.videoHeight;
+  c.getContext('2d').drawImage(video,0,0);
+  c.toBlob(b=>{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(b);
+    const t=new Date();
+    a.download='tm-data-'+t.toISOString().slice(0,19).replace(/[:T]/g,'-')+'.jpg';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+    toast('📸 Frame disimpan! Masukkan ke kelas TM & train semula.');
+  },'image/jpeg',0.9);
+});
+
 document.getElementById('btnUpload').addEventListener('click',()=>document.getElementById('failGambar').click());
 document.getElementById('failGambar').addEventListener('change', async e=>{
   const fail=e.target.files[0]; if(!fail) return;
@@ -734,10 +811,11 @@ document.getElementById('failGambar').addEventListener('change', async e=>{
     const hasil=await model.predict(imgUpload);
     hasil.sort((a,b)=>b.probability-a.probability);
     const top=hasil[0];
+    const kedua=hasil[1]?hasil[1].probability:0;
     const namaKelas=top.className.trim();
     const namaUpper=namaKelas.toUpperCase();
     document.getElementById('barYakin').style.width=Math.round(top.probability*100)+'%';
-    if(top.probability<DB.ambang || namaUpper.startsWith('TIADA')){
+    if(top.probability<DB.ambang || namaUpper.startsWith('TIADA') || (top.probability-kedua)<0.25){
       statusScan.textContent='Tidak pasti ('+Math.round(top.probability*100)+'%)';
       toast('🤔 AI tidak pasti dengan gambar ini. Cuba gambar yang lebih jelas atau lebih dekat.');
     }else{
