@@ -173,6 +173,7 @@
   .overlay-keputusan.buka{display:flex;animation:popMasuk .25s ease}
   .overlay-keputusan.ya{background:rgba(14,82,40,.55)}
   .overlay-keputusan.tidak{background:rgba(127,23,16,.55)}
+  .overlay-keputusan.campur{background:rgba(180,95,0,.55)}
   @keyframes popMasuk{from{opacity:0;transform:scale(1.06)}to{opacity:1;transform:scale(1)}}
   .ikon-besar{
     width:150px;height:150px;border-radius:50%;
@@ -181,6 +182,8 @@
   }
   .ikon-besar.ya{background:radial-gradient(circle at 35% 30%,#8BE06A,var(--hijau-terang) 55%,var(--hijau-gelap));animation:glowHijau .9s infinite alternate}
   .ikon-besar.tidak{background:radial-gradient(circle at 35% 30%,#FF8A80,var(--merah) 55%,#7f1710);animation:glowMerah .9s infinite alternate}
+  .ikon-besar.campur{background:radial-gradient(circle at 35% 30%,#FFD54F,#F9A825 55%,#9c5f00);animation:glowOren .9s infinite alternate}
+  @keyframes glowOren{from{box-shadow:0 0 18px 4px rgba(249,168,37,.5)}to{box-shadow:0 0 44px 14px rgba(255,193,7,.85)}}
   .overlay-keputusan .label{
     font-size:1.1rem;font-weight:bold;color:#fff;text-align:center;
     background:rgba(0,0,0,.4);padding:10px 22px;border-radius:18px;max-width:86%;
@@ -472,8 +475,9 @@
       <input type="text" id="urlTM" placeholder="https://teachablemachine.withgoogle.com/models/xxxxx/">
       <div class="nota info" style="display:block;margin-top:10px">
         📌 <b>Penting:</b> Namakan kelas dalam Teachable Machine dengan awalan:<br>
-        • <b>BOLEH - Kulit Pisang</b> (boleh kompos)<br>
-        • <b>TIDAK - Plastik</b> (tidak boleh)<br>
+        • <b>BOLEH - Kulit Pisang</b> (boleh kompos → lampu hijau ✓)<br>
+        • <b>TIDAK - Plastik</b> (tidak boleh → lampu merah ✕)<br>
+        • <b>CAMPUR - Sisa Bercampur</b> (pinggan bercampur → lampu oren ⇄ "asingkan dahulu")<br>
         • <b>TIADA</b> (latar kosong / tiada objek)
       </div>
       <label>Ambang keyakinan (0.5 – 0.99)</label>
@@ -754,6 +758,8 @@ function bunyikan(jenis){
     const t=audioCtx.currentTime;
     if(jenis==='ya'){ o.type='sine'; o.frequency.setValueAtTime(660,t); o.frequency.setValueAtTime(880,t+.12); o.frequency.setValueAtTime(1100,t+.24);
       g.gain.exponentialRampToValueAtTime(.0001,t+.45); o.start(t); o.stop(t+.45);
+    }else if(jenis==='campur'){ o.type='triangle'; o.frequency.setValueAtTime(520,t); o.frequency.setValueAtTime(392,t+.16); o.frequency.setValueAtTime(520,t+.32);
+      g.gain.exponentialRampToValueAtTime(.0001,t+.5); o.start(t); o.stop(t+.5);
     }else{ o.type='square'; o.frequency.setValueAtTime(220,t); o.frequency.setValueAtTime(160,t+.15);
       g.gain.exponentialRampToValueAtTime(.0001,t+.4); o.start(t); o.stop(t+.4); }
   }catch(e){}
@@ -885,35 +891,41 @@ async function ramal(){
   if(namaKelas===calonNama){ calonKira++; } else { calonNama=namaKelas; calonKira=1; }
   if(calonKira>=5 && namaKelas!==itemPopupSemasa){
     itemPopupSemasa=namaKelas;
-    const boleh = namaUpper.startsWith('BOLEH');
-    const namaBersih = namaKelas.replace(/^(BOLEH|TIDAK)\s*[-–:]\s*/i,'').trim() || namaKelas;
-    rekodScan(boleh,namaBersih);
-    paparKeputusanScan(namaBersih, boleh);
+    const jenis = namaUpper.startsWith('BOLEH') ? 'ya' : (namaUpper.startsWith('CAMPUR') ? 'campur' : 'tidak');
+    const namaBersih = namaKelas.replace(/^(BOLEH|TIDAK|CAMPUR)\s*[-–:]\s*/i,'').trim() || namaKelas;
+    rekodScan(jenis,namaBersih);
+    paparKeputusanScan(namaBersih, jenis);
   }
 }
 
 /* ── Overlay keputusan dalam kamera: papar 2.6 saat, auto sambung scan ── */
 let overlayAktif=false, overlayTimer=null;
-function paparKeputusanScan(nama, boleh){
+function paparKeputusanScan(nama, jenis){
   overlayAktif=true;
-  bunyikan(boleh?'ya':'tidak');
-  if(navigator.vibrate) navigator.vibrate(boleh?[80]:[60,60,60]);
+  bunyikan(jenis);
+  if(navigator.vibrate) navigator.vibrate(jenis==='ya'?[80]:(jenis==='campur'?[50,50,50,50]:[60,60,60]));
   const o=document.getElementById('overlayKeputusan');
   const ik=document.getElementById('ikonBesar');
   const lb=document.getElementById('labelKeputusan');
-  ik.className='ikon-besar '+(boleh?'ya':'tidak');
-  ik.textContent=boleh?'✓':'✕';
-  lb.innerHTML=boleh
-    ? esc(nama)+'<small>🌱 Boleh kompos — masukkan ke tong kompos!</small>'
-    : esc(nama)+'<small>🗑️ Tidak boleh — buang ke tong biasa ya!</small>';
-  o.className='overlay-keputusan buka '+(boleh?'ya':'tidak');
+  ik.className='ikon-besar '+jenis;
+  if(jenis==='ya'){
+    ik.textContent='✓';
+    lb.innerHTML=esc(nama)+'<small>🌱 Boleh kompos — masukkan ke tong kompos!</small>';
+  }else if(jenis==='campur'){
+    ik.textContent='⇄';
+    lb.innerHTML='Sisa Bercampur!<small>🔀 Asingkan dahulu: makanan ke satu bahagian, plastik/tulang ke bahagian lain — kemudian scan satu-satu ya!</small>';
+  }else{
+    ik.textContent='✕';
+    lb.innerHTML=esc(nama)+'<small>🗑️ Tidak boleh — buang ke tong biasa ya!</small>';
+  }
+  o.className='overlay-keputusan buka '+jenis;
   clearTimeout(overlayTimer);
   overlayTimer=setTimeout(()=>{
     o.className='overlay-keputusan';
     overlayAktif=false;
     calonNama=null; calonKira=0;
     statusScan.textContent='Mencari sisa makanan... 👀';
-  },2600);
+  },jenis==='campur'?3600:2600);
 }
 
 /* ═══════════════ SEMAK DARI GAMBAR UPLOAD ═══════════════ */
@@ -960,10 +972,11 @@ document.getElementById('failGambar').addEventListener('change', async e=>{
       toast('🤔 AI tidak pasti dengan gambar ini. Cuba gambar yang lebih jelas atau lebih dekat.');
     }else{
       statusScan.textContent=namaKelas+' ('+Math.round(top.probability*100)+'%)';
-      const boleh=namaUpper.startsWith('BOLEH');
-      const namaBersih=namaKelas.replace(/^(BOLEH|TIDAK)\s*[-–:]\s*/i,'').trim()||namaKelas;
-      rekodScan(boleh,namaBersih);
-      bukaPopup(namaBersih,boleh);
+      const jenis = namaUpper.startsWith('BOLEH') ? 'ya' : (namaUpper.startsWith('CAMPUR') ? 'campur' : 'tidak');
+      const namaBersih=namaKelas.replace(/^(BOLEH|TIDAK|CAMPUR)\s*[-–:]\s*/i,'').trim()||namaKelas;
+      rekodScan(jenis,namaBersih);
+      if(jenis==='campur') paparKeputusanScan(namaBersih,'campur');
+      else bukaPopup(namaBersih, jenis==='ya');
     }
   }catch(err){
     console.error(err);
@@ -973,12 +986,13 @@ document.getElementById('failGambar').addEventListener('change', async e=>{
   }
 });
 
-function rekodScan(boleh,nama){
+function rekodScan(jenis,nama){
   const hariIni = new Date().toISOString().slice(0,10);
   DB.stat.scanIkutTarikh[hariIni]=(DB.stat.scanIkutTarikh[hariIni]||0)+1;
-  boleh ? DB.stat.kompos++ : DB.stat.tong++;
+  if(jenis==='ya') DB.stat.kompos++;
+  else if(jenis==='tidak') DB.stat.tong++;
   simpan();
-  gasPost('scan',{item:nama||'-',keputusan:boleh?'BOLEH KOMPOS':'TIDAK BOLEH'});
+  gasPost('scan',{item:nama||'-',keputusan:jenis==='ya'?'BOLEH KOMPOS':(jenis==='campur'?'CAMPUR':'TIDAK BOLEH')});
 }
 
 /* ═══════════════ POPUP (slide dari kanan) ═══════════════ */
