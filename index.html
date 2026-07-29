@@ -189,6 +189,11 @@ nav button.aktif .material-symbols-rounded{font-variation-settings:'FILL' 1,'wgh
 .sensor-bacaan.oren .sb-nilai{color:var(--orange)}
 .sensor-bacaan.merah .sb-nilai{color:var(--red)}
 .sensor-tarikh{font-size:11px;color:var(--t2);text-align:center;margin-top:10px}
+.lencana-live{display:inline-flex;align-items:center;gap:5px;background:rgba(255,59,48,.12);color:var(--red);font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px;margin-left:6px;letter-spacing:.05em}
+.titik-live{width:7px;height:7px;border-radius:50%;background:var(--red);animation:kelipLive 1.2s infinite}
+@keyframes kelipLive{0%,100%{opacity:1}50%{opacity:.3}}
+.btn-hantar-manual{background:var(--green);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;margin-top:2px}
+.btn-hantar-manual:active{transform:scale(.97)}
 .sensor-kosong{font-size:13px;color:var(--t2);text-align:center;padding:6px}
 .stat-kad{background:var(--card);border-radius:var(--r-card);padding:18px;box-shadow:var(--shadow-sm)}
 .stat-kad .lbl{font-size:13px;font-weight:500;color:var(--t2);display:flex;align-items:center;gap:6px;margin-bottom:10px}
@@ -529,9 +534,13 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
       </div>
     </div>
 
-    <div class="kad" id="kadSensor" style="display:none">
+    <div class="kad" id="kadSensor">
       <h2><span class="material-symbols-rounded">monitor_heart</span>Pantauan Kompos</h2>
       <div id="sensorDashboard" style="display:flex;flex-direction:column;gap:12px"></div>
+      <div id="sensorBelumSambung" style="display:none">
+        <p class="body" style="font-size:13px;color:var(--t2);text-align:center;margin:6px 0 12px">Sambungkan micro:bit dalam tong kompos untuk pantauan suhu &amp; kelembapan secara langsung.</p>
+        <button class="btn btn-blue btn-penuh" id="btnBTsensor"><span class="material-symbols-rounded">bluetooth_searching</span>Sambung Sensor Kompos</button>
+      </div>
     </div>
 
     <div class="kad">
@@ -589,7 +598,8 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
     </div>
     <div class="kad">
       <h2><span class="material-symbols-rounded">bluetooth</span>Penimbang Load Cell</h2>
-      <button class="btn btn-blue btn-penuh" id="btnBT"><span class="material-symbols-rounded">bluetooth_searching</span>Sambung micro:bit</button>
+      <p class="body" style="font-size:12px;color:var(--t2);margin:-4px 0 10px">Sambung micro:bit penimbang untuk timbang sisa. <b>Untuk sensor kompos (suhu/kelembapan), sambung di tab Utama.</b></p>
+      <button class="btn btn-blue btn-penuh" id="btnBT"><span class="material-symbols-rounded">bluetooth_searching</span>Sambung micro:bit (Timbang)</button>
       <label>Atau masukkan berat manual (kg)</label>
       <input type="number" id="beratManual" step="0.01" min="0" placeholder="Contoh: 0.35">
       <label>Tambah ke batch</label>
@@ -1503,9 +1513,11 @@ document.getElementById('btnMasukBatch').addEventListener('click',()=>{
 /* ═══════════════ MICRO:BIT LOAD CELL (Web Bluetooth UART) ═══════════════ */
 const UART_SERVICE='6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 let beratSemasa=0, btDevice=null, suhuSemasa=null, lembapanSemasa=null;
+let sensorLive=null;          // {suhu, lembapan, masa} bacaan langsung terkini
+let autoHantarAkhir=0;        // masa (ms) kali terakhir auto-hantar ke Sheet
 
-document.getElementById('btnBT').addEventListener('click', async ()=>{
-  if(!navigator.bluetooth){ toast('⚠️ Pelayar ini tiada Web Bluetooth. Guna Chrome/Edge.'); return; }
+async function sambungMicrobit(){
+  if(!navigator.bluetooth){ toast('⚠️ Pelayar ini tiada Web Bluetooth. Guna Chrome/Edge di laptop atau Android (bukan iPad).'); return; }
   try{
     btDevice = await navigator.bluetooth.requestDevice({
       filters:[{namePrefix:'BBC micro:bit'}],
@@ -1535,6 +1547,10 @@ document.getElementById('btnBT').addEventListener('click', async ()=>{
           if(mL && !isNaN(l)) mL.value=Math.round(l);
           // Papar pada status BT
           document.getElementById('statusBT').textContent='Sensor: '+s.toFixed(1)+'°C · '+Math.round(l)+'%';
+          // LIVE: kemas kini dashboard terus + rekod masa
+          sensorLive={suhu:s,lembapan:l,masa:Date.now()};
+          paparSensorLive();
+          autoHantarSensor();  // hantar ke Sheet setiap 1 jam (dikawal dalaman)
         }else{
           // Format load cell: satu nilai berat (kg)
           const nilai=parseFloat(baris.replace(/[^0-9.\-]/g,''));
@@ -1553,7 +1569,11 @@ document.getElementById('btnBT').addEventListener('click', async ()=>{
     console.error(err);
     toast('⚠️ Gagal sambung micro:bit: '+err.message);
   }
-});
+}
+// Kedua-dua butang (Timbang & Utama) guna fungsi sama
+document.getElementById('btnBT').addEventListener('click', sambungMicrobit);
+const btnBTs=document.getElementById('btnBTsensor');
+if(btnBTs) btnBTs.addEventListener('click', sambungMicrobit);
 
 document.getElementById('beratManual').addEventListener('input',e=>{
   const v=parseFloat(e.target.value); if(!isNaN(v)){ beratSemasa=v; paparBerat(); }
@@ -1930,6 +1950,66 @@ function statusLembap(l){
   if(l>=50&&l<=60) return {kelas:'hijau',status:'ok',teks:'Sempurna'};
   return {kelas:'oren',status:'awas',teks:'Sederhana'};
 }
+// Cari batch aktif pertama (untuk kaitkan bacaan sensor live)
+function batchAktifUtama(){
+  return DB.batches.find(b=>b.status!=='selesai')||null;
+}
+
+// Papar bacaan LIVE di kad Pantauan Kompos (dashboard Utama)
+function paparSensorLive(){
+  const kad=document.getElementById('kadSensor');
+  const wrap=document.getElementById('sensorDashboard');
+  if(!kad||!wrap) return;
+  if(!sensorLive){ paparSensorDashboard(); return; }  // tiada live → guna rekod tersimpan
+  const b=batchAktifUtama();
+  const nama=b?b.nama:'Kompos';
+  const s=sensorLive.suhu, l=sensorLive.lembapan;
+  let sel='';
+  if(!isNaN(s)){
+    const st=statusSuhu(s);
+    sel+=`<div class="sensor-bacaan ${st.kelas}"><div class="sb-label"><span class="material-symbols-rounded">device_thermostat</span>Suhu</div><div class="sb-nilai">${s.toFixed(1)}°</div><div class="sb-status ${st.status}"><span class="titik"></span>${st.teks}</div></div>`;
+  }
+  if(!isNaN(l)){
+    const sl=statusLembap(l);
+    sel+=`<div class="sensor-bacaan ${sl.kelas}"><div class="sb-label"><span class="material-symbols-rounded">water_drop</span>Lembapan</div><div class="sb-nilai">${Math.round(l)}%</div><div class="sb-status ${sl.status}"><span class="titik"></span>${sl.teks}</div></div>`;
+  }
+  wrap.innerHTML=`<div class="sensor-batch"><div class="sb-nama"><span class="material-symbols-rounded">compost</span>${esc(nama)} <span class="lencana-live"><span class="titik-live"></span>LIVE</span></div><div class="sensor-grid">${sel}</div><div class="sensor-tarikh">Dikemas kini: ${new Date(sensorLive.masa).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'})} · <button class="btn-hantar-manual" onclick="hantarSensorManual()">Hantar ke Sheet sekarang</button></div></div>`;
+  const bs=document.getElementById('sensorBelumSambung'); if(bs) bs.style.display='none';
+  kad.style.display='block';
+}
+
+// Auto-hantar ke Sheet setiap 1 jam (dipanggil setiap kali data masuk, tapi hantar ikut selang)
+function autoHantarSensor(){
+  if(!sensorLive) return;
+  const SEJAM=60*60*1000;
+  if(Date.now()-autoHantarAkhir < SEJAM) return;  // belum sampai 1 jam
+  autoHantarAkhir=Date.now();
+  const b=batchAktifUtama();
+  rekodSensor(sensorLive.suhu, sensorLive.lembapan, b, true);  // senyap
+}
+
+// Butang hantar manual — hantar bacaan live sekarang ke Sheet
+function hantarSensorManual(){
+  if(!sensorLive){ toast('⚠️ Tiada bacaan sensor. Pastikan micro:bit bersambung.'); return; }
+  const b=batchAktifUtama();
+  rekodSensor(sensorLive.suhu, sensorLive.lembapan, b, false);
+  autoHantarAkhir=Date.now();  // reset kira sejam
+}
+
+// Rekod bacaan ke DB + Sheet (dikongsi oleh auto & manual)
+function rekodSensor(suhu, lembapan, b, senyap){
+  if(!b){ if(!senyap) toast('⚠️ Cipta batch dahulu untuk merekod bacaan.'); return; }
+  if(!DB.sensor[b.id]) DB.sensor[b.id]=[];
+  const hariIni=new Date().toISOString().slice(0,10);
+  const sedia=DB.sensor[b.id].find(x=>x.tarikh===hariIni);
+  const sVal=suhu!=null?suhu.toFixed(1):'', lVal=lembapan!=null?Math.round(lembapan):'';
+  if(sedia){ sedia.suhu=sVal; sedia.lembapan=lVal; }
+  else { DB.sensor[b.id].push({tarikh:hariIni,suhu:sVal,lembapan:lVal}); }
+  simpan();
+  gasPost('sensor',{batchNama:b.nama,suhu:sVal,lembapan:lVal});
+  if(!senyap) toast('📤 Bacaan dihantar ke Sheet!');
+}
+
 function paparSensorDashboard(){
   const kad=document.getElementById('kadSensor');
   const wrap=document.getElementById('sensorDashboard');
@@ -1954,8 +2034,9 @@ function paparSensorDashboard(){
     if(!sel) return;
     html+=`<div class="sensor-batch"><div class="sb-nama"><span class="material-symbols-rounded">compost</span>${esc(b.nama)}</div><div class="sensor-grid">${sel}</div><div class="sensor-tarikh">Bacaan terakhir: ${t.tarikh||'-'}</div></div>`;
   });
-  if(ada){ wrap.innerHTML=html; kad.style.display='block'; }
-  else { kad.style.display='none'; }
+  const bs=document.getElementById('sensorBelumSambung');
+  if(ada){ wrap.innerHTML=html; if(bs) bs.style.display='none'; kad.style.display='block'; }
+  else { wrap.innerHTML=''; if(bs) bs.style.display='block'; kad.style.display='block'; }
 }
 
 /* ═══════════════ LAIN-LAIN ═══════════════ */
