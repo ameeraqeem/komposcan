@@ -168,6 +168,28 @@ nav button.aktif .material-symbols-rounded{font-variation-settings:'FILL' 1,'wgh
 .quick-scan .qs-arrow{margin-left:auto}
 
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* Pantauan sensor dashboard */
+.sensor-batch{border:1px solid var(--border);border-radius:14px;padding:14px}
+.sensor-batch .sb-nama{font-size:15px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sensor-batch .sb-nama .material-symbols-rounded{font-size:18px;color:var(--green)}
+.sensor-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sensor-bacaan{background:var(--fill);border-radius:12px;padding:12px;text-align:center;position:relative}
+.sensor-bacaan .sb-label{font-size:12px;color:var(--t2);display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:6px}
+.sensor-bacaan .sb-label .material-symbols-rounded{font-size:16px}
+.sensor-bacaan .sb-nilai{font-size:28px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.sensor-bacaan .sb-status{font-size:11px;font-weight:600;margin-top:4px;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px}
+.sb-status.ok{background:rgba(52,199,89,.14);color:var(--green-press)}
+.sb-status.awas{background:rgba(255,159,10,.16);color:#9a6000}
+.sb-status.bahaya{background:rgba(255,59,48,.12);color:var(--red)}
+.sb-status .titik{width:6px;height:6px;border-radius:50%}
+.sb-status.ok .titik{background:var(--green)}
+.sb-status.awas .titik{background:var(--orange)}
+.sb-status.bahaya .titik{background:var(--red)}
+.sensor-bacaan.hijau .sb-nilai{color:var(--green)}
+.sensor-bacaan.oren .sb-nilai{color:var(--orange)}
+.sensor-bacaan.merah .sb-nilai{color:var(--red)}
+.sensor-tarikh{font-size:11px;color:var(--t2);text-align:center;margin-top:10px}
+.sensor-kosong{font-size:13px;color:var(--t2);text-align:center;padding:6px}
 .stat-kad{background:var(--card);border-radius:var(--r-card);padding:18px;box-shadow:var(--shadow-sm)}
 .stat-kad .lbl{font-size:13px;font-weight:500;color:var(--t2);display:flex;align-items:center;gap:6px;margin-bottom:10px}
 .stat-kad .lbl .material-symbols-rounded{font-size:18px}
@@ -277,6 +299,9 @@ body.skrin-penuh{overflow:hidden}
 .batch .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .batch .butang-baris{display:flex;gap:8px;margin-top:14px}
 .batch .butang-baris button{flex:1;height:40px;border-radius:12px;font-size:14px;font-weight:600}
+.batch .butang-baris .b-putih{background:var(--fill);color:var(--t1)}
+.batch .butang-baris .b-hijau{background:var(--green);color:#fff}
+.batch .butang-baris .b-merah{background:rgba(255,59,48,.1);color:var(--red);flex:0 0 48px}
 .bahan-senarai{margin-top:12px;font-size:13px;color:var(--t2);line-height:1.8}
 .kosong{text-align:center;color:var(--t2);font-size:15px;padding:32px 16px}
 .kosong .material-symbols-rounded{font-size:44px;display:block;margin-bottom:10px;color:var(--border)}
@@ -504,6 +529,11 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
       </div>
     </div>
 
+    <div class="kad" id="kadSensor" style="display:none">
+      <h2><span class="material-symbols-rounded">monitor_heart</span>Pantauan Kompos</h2>
+      <div id="sensorDashboard" style="display:flex;flex-direction:column;gap:12px"></div>
+    </div>
+
     <div class="kad">
       <h2><span class="material-symbols-rounded">checklist</span>Tindakan Seterusnya</h2>
       <div id="senaraiTindakan"></div>
@@ -609,6 +639,7 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
     <!-- Segmen pemilih -->
     <div class="segmen" id="segmenPanduan">
       <button class="seg-btn aktif" data-seg="mula">Cara Mula</button>
+      <button class="seg-btn" data-seg="sains">Sains</button>
       <button class="seg-btn" data-seg="jaga">Penjagaan</button>
       <button class="seg-btn" data-seg="tuai">Menuai</button>
       <button class="seg-btn" data-seg="perlu">Keperluan</button>
@@ -681,6 +712,53 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
           </div>
         </div>
         <div class="info-blok" style="margin-top:14px"><b>Peraturan mudah:</b> Setiap 1 bahagian hijau, tambah 2–3 bahagian perang. Terlalu hijau = berbau. Terlalu perang = lambat reput.</div>
+      </div>
+    </div>
+
+    <!-- ── SEGMEN: SAINS ── -->
+    <div class="seg-isi" id="seg-sains">
+      <div class="kad">
+        <h2><span class="material-symbols-rounded">biotech</span>Siapa Buat Kompos? Mikrob!</h2>
+        <p class="body" style="font-size:15px;line-height:1.5;margin-bottom:14px">Kompos sebenarnya kerja <b>mikrob</b> — organisma sangat halus (bakteria &amp; kulat) yang tak nampak dengan mata. Merekalah "pekerja" yang makan dan mengurai sisa makanan menjadi baja.</p>
+        <div class="info-blok"><b>Dari mana mikrob datang?</b><br>Mikrob wujud secara semula jadi — pada sisa makanan, dalam tanah, pada daun kering, dan di udara. Anda tak perlu beli! Cukup sediakan keadaan betul, mereka datang &amp; membiak sendiri.</div>
+        <div class="info-blok" style="margin-top:12px"><b>Nak percepat?</b> Tambah segenggam kompos lama atau tanah kebun sebagai "benih" mikrob (pilihan sahaja).</div>
+      </div>
+
+      <div class="kad">
+        <h2><span class="material-symbols-rounded">device_thermostat</span>Kenapa Suhu Penting?</h2>
+        <p class="body" style="font-size:15px;line-height:1.5;margin-bottom:12px">Bila mikrob bekerja kuat, mereka hasilkan <b>haba</b> — sama macam kita bersenam badan jadi panas. Jadi suhu memberitahu sama ada mikrob aktif atau tidak.</p>
+        <div class="senarai-semak">
+          <div class="ss-item"><span class="material-symbols-rounded warn">ac_unit</span><span><b>Bawah 35°C:</b> mikrob malas / kurang. Tambah bahan hijau &amp; kacau.</span></div>
+          <div class="ss-item"><span class="material-symbols-rounded ok">check_circle</span><span><b>40–65°C:</b> mikrob bekerja kuat! Benih rumpai &amp; kuman mati. Inilah sasaran.</span></div>
+          <div class="ss-item"><span class="material-symbols-rounded warn">local_fire_department</span><span><b>Atas 70°C:</b> terlalu panas, mikrob baik pun mati. Kacau &amp; renjis air.</span></div>
+        </div>
+        <div class="info-blok" style="margin-top:14px">💡 Suhu ibarat <b>"nadi"</b> kompos — macam doktor periksa nadi pesakit, sensor periksa "nadi" kompos.</div>
+      </div>
+
+      <div class="kad">
+        <h2><span class="material-symbols-rounded">water_drop</span>Kenapa Kelembapan Penting?</h2>
+        <p class="body" style="font-size:15px;line-height:1.5;margin-bottom:12px">Mikrob ialah benda hidup — mereka perlukan <b>air</b> untuk hidup. Macam manusia perlu minum, mikrob mati kalau kekeringan, tapi "lemas" kalau terlalu basah.</p>
+        <div class="senarai-semak">
+          <div class="ss-item"><span class="material-symbols-rounded warn">grass</span><span><b>Bawah 40%:</b> terlalu kering, mikrob kehausan. Renjis air.</span></div>
+          <div class="ss-item"><span class="material-symbols-rounded ok">check_circle</span><span><b>50–60%:</b> sempurna — lembap macam span diperah.</span></div>
+          <div class="ss-item"><span class="material-symbols-rounded warn">flood</span><span><b>Atas 70%:</b> terlalu basah, udara tak masuk → mikrob jahat ambil alih → BUSUK. Tambah bahan perang.</span></div>
+        </div>
+        <div class="info-blok" style="margin-top:14px">💡 Kelembapan ialah <b>"minuman"</b> mikrob — pastikan mereka ada air cukup untuk hidup &amp; bekerja.</div>
+      </div>
+
+      <div class="kad">
+        <h2><span class="material-symbols-rounded">scale</span>Kenapa Timbang Berat?</h2>
+        <p class="body" style="font-size:15px;line-height:1.5;margin-bottom:12px">Load cell mengukur <b>berat sebenar</b> sisa yang dikitar — bukan sekadar anggaran. Ini memberi bukti kukuh untuk projek.</p>
+        <div class="senarai-semak">
+          <div class="ss-item"><span class="material-symbols-rounded ok">verified</span><span><b>Bukti sebenar:</b> "42 kg dikitar" boleh disahkan, bukan teka</span></div>
+          <div class="ss-item"><span class="material-symbols-rounded ok">bar_chart</span><span><b>Data dashboard:</b> carta terisi dengan berat sebenar</span></div>
+          <div class="ss-item"><span class="material-symbols-rounded ok">balance</span><span><b>Kira nisbah:</b> tahu berapa bahan perang perlu ditambah</span></div>
+        </div>
+      </div>
+
+      <div class="kad" style="background:var(--green);color:#fff">
+        <h2 style="color:#fff"><span class="material-symbols-rounded" style="color:#fff">lightbulb</span>Rumusan Sains KompoScan</h2>
+        <p style="font-size:15px;line-height:1.55;color:#fff">Kompos ialah kerja berjuta mikrob yang mengurai sisa. <b>Sensor suhu</b> beritahu mikrob sedang bekerja, <b>sensor kelembapan</b> pastikan mereka ada air, dan <b>load cell</b> mengukur berat sebenar yang dikitar — memberi bukti impak yang boleh disahkan.</p>
       </div>
     </div>
 
@@ -1584,9 +1662,14 @@ document.getElementById('btnPanduanTutup').addEventListener('click',()=>
 let sensorBatchId=null;
 function bukaSensor(id){
   sensorBatchId=id;
-  // Auto-isi jika sensor micro:bit tersambung; jika tidak, kosongkan
-  document.getElementById('sensorSuhu').value = (suhuSemasa!=null) ? suhuSemasa.toFixed(1) : '';
-  document.getElementById('sensorLembapan').value = (lembapanSemasa!=null) ? Math.round(lembapanSemasa) : '';
+  const hariIni=new Date().toISOString().slice(0,10);
+  const senarai=(DB.sensor&&DB.sensor[id])||[];
+  const sedia=senarai.find(x=>x.tarikh===hariIni);
+  // Keutamaan: (1) bacaan micro:bit langsung, (2) bacaan hari ini yang dah direkod, (3) kosong
+  if(suhuSemasa!=null) document.getElementById('sensorSuhu').value=suhuSemasa.toFixed(1);
+  else document.getElementById('sensorSuhu').value = sedia&&sedia.suhu ? sedia.suhu : '';
+  if(lembapanSemasa!=null) document.getElementById('sensorLembapan').value=Math.round(lembapanSemasa);
+  else document.getElementById('sensorLembapan').value = sedia&&sedia.lembapan ? sedia.lembapan : '';
   document.getElementById('sensorModal').classList.add('buka');
 }
 document.getElementById('btnSensorTutup').addEventListener('click',()=>
@@ -1597,11 +1680,15 @@ document.getElementById('btnSimpanSensor').addEventListener('click',()=>{
   if(suhu==='' && lembapan===''){ toast('⚠️ Masukkan sekurang-kurangnya satu bacaan.'); return; }
   const b=DB.batches.find(x=>x.id===sensorBatchId); if(!b) return;
   if(!DB.sensor[sensorBatchId]) DB.sensor[sensorBatchId]=[];
-  DB.sensor[sensorBatchId].push({tarikh:new Date().toISOString().slice(0,10),suhu,lembapan});
-  simpan(); paparBatch();
+  const hariIni=new Date().toISOString().slice(0,10);
+  const senarai=DB.sensor[sensorBatchId];
+  const sedia=senarai.find(x=>x.tarikh===hariIni);
+  if(sedia){ sedia.suhu=suhu; sedia.lembapan=lembapan; }  // ganti bacaan hari sama
+  else { senarai.push({tarikh:hariIni,suhu,lembapan}); }  // tambah baharu untuk hari lain
+  simpan(); paparBatch(); paparDashboard();
   gasPost('sensor',{batchNama:b.nama,suhu,lembapan});
   document.getElementById('sensorModal').classList.remove('buka');
-  toast('🌡️ Bacaan disimpan!');
+  toast(sedia?'🌡️ Bacaan hari ini dikemas kini!':'🌡️ Bacaan disimpan!');
 });
 
 /* ═══════════════ QR CODE ═══════════════ */
@@ -1827,6 +1914,48 @@ function paparDashboard(){
   t.innerHTML=tindakan.join('');
   document.getElementById('fakta').textContent=FAKTA[new Date().getDate()%FAKTA.length];
   lukisCarta();
+  paparSensorDashboard();
+}
+
+/* Papar bacaan sensor terkini setiap batch aktif di dashboard */
+function statusSuhu(s){
+  if(s<35) return {kelas:'oren',status:'awas',teks:'Sejuk'};
+  if(s>70) return {kelas:'merah',status:'bahaya',teks:'Panas'};
+  if(s>=40&&s<=65) return {kelas:'hijau',status:'ok',teks:'Sihat'};
+  return {kelas:'oren',status:'awas',teks:'Sederhana'};
+}
+function statusLembap(l){
+  if(l<40) return {kelas:'oren',status:'awas',teks:'Kering'};
+  if(l>70) return {kelas:'merah',status:'bahaya',teks:'Basah'};
+  if(l>=50&&l<=60) return {kelas:'hijau',status:'ok',teks:'Sempurna'};
+  return {kelas:'oren',status:'awas',teks:'Sederhana'};
+}
+function paparSensorDashboard(){
+  const kad=document.getElementById('kadSensor');
+  const wrap=document.getElementById('sensorDashboard');
+  const aktif=DB.batches.filter(b=>b.status!=='selesai');
+  let html='';
+  let ada=false;
+  aktif.forEach(b=>{
+    const bacaan=(DB.sensor&&DB.sensor[b.id])||[];
+    if(!bacaan.length) return;
+    ada=true;
+    const t=bacaan[bacaan.length-1];
+    const suhu=parseFloat(t.suhu), lembap=parseFloat(t.lembapan);
+    let sel='';
+    if(!isNaN(suhu)){
+      const st=statusSuhu(suhu);
+      sel+=`<div class="sensor-bacaan ${st.kelas}"><div class="sb-label"><span class="material-symbols-rounded">device_thermostat</span>Suhu</div><div class="sb-nilai">${suhu.toFixed(1)}°</div><div class="sb-status ${st.status}"><span class="titik"></span>${st.teks}</div></div>`;
+    }
+    if(!isNaN(lembap)){
+      const sl=statusLembap(lembap);
+      sel+=`<div class="sensor-bacaan ${sl.kelas}"><div class="sb-label"><span class="material-symbols-rounded">water_drop</span>Lembapan</div><div class="sb-nilai">${Math.round(lembap)}%</div><div class="sb-status ${sl.status}"><span class="titik"></span>${sl.teks}</div></div>`;
+    }
+    if(!sel) return;
+    html+=`<div class="sensor-batch"><div class="sb-nama"><span class="material-symbols-rounded">compost</span>${esc(b.nama)}</div><div class="sensor-grid">${sel}</div><div class="sensor-tarikh">Bacaan terakhir: ${t.tarikh||'-'}</div></div>`;
+  });
+  if(ada){ wrap.innerHTML=html; kad.style.display='block'; }
+  else { kad.style.display='none'; }
 }
 
 /* ═══════════════ LAIN-LAIN ═══════════════ */
