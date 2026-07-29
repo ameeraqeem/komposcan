@@ -1515,6 +1515,7 @@ const UART_SERVICE='6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 let beratSemasa=0, btDevice=null, suhuSemasa=null, lembapanSemasa=null;
 let sensorLive=null;          // {suhu, lembapan, masa} bacaan langsung terkini
 let autoHantarAkhir=0;        // masa (ms) kali terakhir auto-hantar ke Sheet
+let bahayaAkhir=0;            // masa (ms) kali terakhir hantar amaran bahaya
 
 async function sambungMicrobit(){
   if(!navigator.bluetooth){ toast('⚠️ Pelayar ini tiada Web Bluetooth. Guna Chrome/Edge di laptop atau Android (bukan iPad).'); return; }
@@ -1979,13 +1980,32 @@ function paparSensorLive(){
 }
 
 // Auto-hantar ke Sheet setiap 1 jam (dipanggil setiap kali data masuk, tapi hantar ikut selang)
+// Semak sama ada bacaan berada dalam zon BAHAYA (perlu hantar segera)
+function bacaanBahaya(suhu, lembapan){
+  const st=(suhu!=null)?statusSuhu(suhu).status:'ok';
+  const sl=(lembapan!=null)?statusLembap(lembapan).status:'ok';
+  return st==='bahaya' || sl==='bahaya';
+}
+
 function autoHantarSensor(){
   if(!sensorLive) return;
-  const SEJAM=60*60*1000;
-  if(Date.now()-autoHantarAkhir < SEJAM) return;  // belum sampai 1 jam
-  autoHantarAkhir=Date.now();
   const b=batchAktifUtama();
-  rekodSensor(sensorLive.suhu, sensorLive.lembapan, b, true);  // senyap
+  const bahaya=bacaanBahaya(sensorLive.suhu, sensorLive.lembapan);
+  // BAHAYA → hantar SERTA-MERTA (tapi elak spam: sekali setiap 5 minit)
+  if(bahaya){
+    const LIMA_MINIT=5*60*1000;
+    if(Date.now()-bahayaAkhir >= LIMA_MINIT){
+      bahayaAkhir=Date.now();
+      autoHantarAkhir=Date.now();
+      rekodSensor(sensorLive.suhu, sensorLive.lembapan, b, true);
+    }
+    return;
+  }
+  // SIHAT → hantar ikut jadual sejam
+  const SEJAM=60*60*1000;
+  if(Date.now()-autoHantarAkhir < SEJAM) return;
+  autoHantarAkhir=Date.now();
+  rekodSensor(sensorLive.suhu, sensorLive.lembapan, b, true);
 }
 
 // Butang hantar manual — hantar bacaan live sekarang ke Sheet
