@@ -1084,6 +1084,7 @@ const URL_TM_LALAI = "https://teachablemachine.withgoogle.com/models/Ips1IVVZ5/"
 let DB = { batches:[], stat:{totalKg:0,kompos:0,tong:0,scanIkutTarikh:{}}, urlTM:URL_TM_LALAI, ambang:0.85, pin:btoa('1234'), urlGAS:'https://script.google.com/macros/s/AKfycbzaY2o9BPRCs4gvBsb3Lb6kbwDoWBRGwEdwFbQg_U44yPvhziJUkRJ0P9OFGyZH0tuC/exec', sensor:{} };
 try{ const d=storan.get('komposcan'); if(d) DB = Object.assign(DB, JSON.parse(d)); }catch(e){}
 DB.sensor = DB.sensor || {};
+if(!DB.urlTM) DB.urlTM = URL_TM_LALAI;  // guna URL benam kalau tersimpan kosong
 function simpan(){ storan.set('komposcan', JSON.stringify(DB)); }
 
 /* ═══════════════ DATABASE GOOGLE SHEETS (Apps Script) ═══════════════ */
@@ -1281,12 +1282,29 @@ document.getElementById('btnScan').addEventListener('click', async function(){
   if(!model){ const ok=await muatModel(); if(!ok) return; }
   if(!stream){
     try{
-      stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1024}},audio:false});
+      // Cuba kamera belakang dulu (terbaik untuk scan)
+      try{
+        stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1024}},audio:false});
+      }catch(e1){
+        // Fallback: mana-mana kamera yang ada
+        stream = await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+      }
       video.srcObject = stream;
       await new Promise(r=>video.onloadedmetadata=r);
+      try{ await video.play(); }catch(e){}
     }catch(err){
       notaScan.className='amaran-box merah tampil'; notaScan.style.display='block';
-      notaScan.innerHTML='Kamera tidak dapat diakses. Pastikan app dibuka melalui <b>HTTPS</b> (GitHub Pages/Netlify) dan benarkan kamera.';
+      let pesan='Kamera tidak dapat diakses. ';
+      if(err && err.name==='NotAllowedError'){
+        pesan+='Kebenaran kamera ditolak. Tekan ikon 🔒 di sebelah alamat URL → Kebenaran → Kamera → Benarkan, kemudian muat semula halaman.';
+      }else if(err && err.name==='NotFoundError'){
+        pesan+='Tiada kamera dikesan pada peranti ini.';
+      }else if(err && err.name==='NotReadableError'){
+        pesan+='Kamera sedang digunakan oleh aplikasi lain. Tutup app kamera lain dan cuba lagi.';
+      }else{
+        pesan+='Pastikan app dibuka melalui <b>HTTPS</b> dan kebenaran kamera dibenarkan. Guna Chrome (Android) atau Safari (iOS).';
+      }
+      notaScan.innerHTML=pesan;
       return;
     }
   }
