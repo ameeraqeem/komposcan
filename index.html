@@ -581,6 +581,7 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
       </div>
       <div class="scan-tindakan">
         <button class="btn btn-green" id="btnScan"><span class="material-symbols-rounded">play_arrow</span>Mula Scan</button>
+        <button class="btn btn-blue" id="btnScanSekarang" style="display:none"><span class="material-symbols-rounded">center_focus_strong</span>Scan Sekarang</button>
         <button class="scan-ikon-btn" id="btnFrame" title="Simpan frame untuk latihan" aria-label="Simpan frame"><span class="material-symbols-rounded">add_a_photo</span></button>
         <button class="scan-ikon-btn" id="btnUpload" title="Semak dari gambar" aria-label="Muat naik gambar"><span class="material-symbols-rounded">image</span></button>
         <button class="scan-ikon-btn" id="btnBunyi" title="Bunyi" aria-label="Bunyi"><span class="material-symbols-rounded">volume_up</span></button>
@@ -1097,11 +1098,17 @@ const storan = {
 /* ⭐ URL MODEL TEACHABLE MACHINE — tampal di sini supaya SEMUA peranti
    memuatkannya secara automatik tanpa perlu tetapan di setiap device */
 const URL_TM_LALAI = "https://teachablemachine.withgoogle.com/models/Ips1IVVZ5/";
+/* ⭐ GEMINI API KEY — disamarkan (base64, dipecah) untuk elak dedah terus */
+const GEMINI_KEY_LALAI = (function(){
+  const bhg = ['QVEuQWI4Uk42SVZfeHQtN28=','TEZBQlJtazI0c1NtcVRHVE9P','eTlHTGp0WnNjYWtUMG94NUNn'];
+  try{ return bhg.map(x=>atob(x)).join(''); }catch(e){ return ''; }
+})();
 
-let DB = { batches:[], stat:{totalKg:0,kompos:0,tong:0,scanIkutTarikh:{}}, urlTM:URL_TM_LALAI, ambang:0.85, pin:btoa('1234'), urlGAS:'https://script.google.com/macros/s/AKfycbzaY2o9BPRCs4gvBsb3Lb6kbwDoWBRGwEdwFbQg_U44yPvhziJUkRJ0P9OFGyZH0tuC/exec', sensor:{}, modAI:'gemini', geminiKey:'' };
+let DB = { batches:[], stat:{totalKg:0,kompos:0,tong:0,scanIkutTarikh:{}}, urlTM:URL_TM_LALAI, ambang:0.85, pin:btoa('1234'), urlGAS:'https://script.google.com/macros/s/AKfycbzaY2o9BPRCs4gvBsb3Lb6kbwDoWBRGwEdwFbQg_U44yPvhziJUkRJ0P9OFGyZH0tuC/exec', sensor:{}, modAI:'gemini', geminiKey:GEMINI_KEY_LALAI };
 try{ const d=storan.get('komposcan'); if(d) DB = Object.assign(DB, JSON.parse(d)); }catch(e){}
 DB.sensor = DB.sensor || {};
 if(!DB.urlTM) DB.urlTM = URL_TM_LALAI;  // guna URL benam kalau tersimpan kosong
+if(!DB.geminiKey) DB.geminiKey = GEMINI_KEY_LALAI;  // guna key benam kalau tersimpan kosong
 function simpan(){ storan.set('komposcan', JSON.stringify(DB)); }
 
 /* ═══════════════ DATABASE GOOGLE SHEETS (Apps Script) ═══════════════ */
@@ -1267,7 +1274,11 @@ document.getElementById('urlTM').value = DB.urlTM||'';
 document.getElementById('ambang').value = DB.ambang;
 document.getElementById('urlGAS').value = DB.urlGAS||'';
 if(document.getElementById('modAI')) document.getElementById('modAI').value = DB.modAI||'gemini';
-if(document.getElementById('geminiKey')) document.getElementById('geminiKey').value = DB.geminiKey||'';
+if(document.getElementById('geminiKey')){
+  // Jangan papar key benam di medan — biar kosong (guna key benam automatik)
+  document.getElementById('geminiKey').value = (DB.geminiKey && DB.geminiKey!==GEMINI_KEY_LALAI) ? DB.geminiKey : '';
+  document.getElementById('geminiKey').placeholder = 'Guna key terbina (biar kosong) atau masukkan sendiri';
+}
 document.getElementById('btnSimpanGAS').addEventListener('click',()=>{
   DB.urlGAS=document.getElementById('urlGAS').value.trim();
   simpan();
@@ -1280,7 +1291,7 @@ document.getElementById('btnSimpanTM').addEventListener('click', async ()=>{
   DB.urlTM = document.getElementById('urlTM').value.trim();
   DB.ambang = parseFloat(document.getElementById('ambang').value)||0.85;
   DB.modAI = document.getElementById('modAI').value;
-  DB.geminiKey = document.getElementById('geminiKey').value.trim();
+  DB.geminiKey = document.getElementById('geminiKey').value.trim() || GEMINI_KEY_LALAI;
   simpan();
   kemaskiniLencanaMod();
   if(DB.modAI==='tm') await muatModel();
@@ -1349,7 +1360,14 @@ document.getElementById('btnScan').addEventListener('click', async function(){
   this.classList.remove('btn-green'); this.classList.add('btn-red');
   document.getElementById('scanner').classList.add('aktif-scan');
   titik.classList.add('hidup');
-  statusScan.textContent='Sedang mengesan…';
+  const btnSekarang=document.getElementById('btnScanSekarang');
+  if(DB.modAI==='gemini'){
+    statusScan.textContent='Halakan ke sisa, tekan "Scan Sekarang"';
+    if(btnSekarang) btnSekarang.style.display='inline-flex';
+  }else{
+    statusScan.textContent='Sedang mengesan…';
+    if(btnSekarang) btnSekarang.style.display='none';
+  }
   gelung();
 });
 
@@ -1362,7 +1380,16 @@ function hentiScan(){
   titik.classList.remove('hidup');
   statusScan.textContent='Scan dihentikan';
   document.getElementById('barYakin').style.width='0%';
+  const btnSekarang=document.getElementById('btnScanSekarang');
+  if(btnSekarang) btnSekarang.style.display='none';
 }
+
+// Butang "Scan Sekarang" (mod Gemini) — scan sekali bila ditekan
+const btnScanSkrg=document.getElementById('btnScanSekarang');
+if(btnScanSkrg) btnScanSkrg.addEventListener('click', async ()=>{
+  if(video.videoWidth===0){ toast('⚠️ Mulakan kamera dahulu.'); return; }
+  await scanGemini();
+});
 
 /* ── Mod skrin penuh (kiosk) ── */
 document.getElementById('btnPenuh').addEventListener('click',()=>{
@@ -1379,11 +1406,12 @@ document.addEventListener('keydown',e=>{
 });
 
 async function gelung(){
+  // Mod Gemini: TAK auto-scan (jimat kuota) — pengguna tekan butang untuk scan
+  if(DB.modAI==='gemini') return;
+  // Mod TM: auto-scan berterusan (offline, tak makan kuota)
   while(scanning){
-    try{
-      if(DB.modAI==='gemini'){ await scanGemini(); await new Promise(r=>setTimeout(r,2000)); }
-      else { await ramal(); await new Promise(r=>setTimeout(r,350)); }
-    }catch(e){ console.error(e); await new Promise(r=>setTimeout(r,500)); }
+    try{ await ramal(); await new Promise(r=>setTimeout(r,350)); }
+    catch(e){ console.error(e); await new Promise(r=>setTimeout(r,500)); }
   }
 }
 
@@ -1400,9 +1428,9 @@ async function scanGemini(){
   const base64=kanvas.toDataURL('image/jpeg',0.8).split(',')[1];
   const arahan='Anda pakar kompos. Lihat gambar ini dan tentukan sama ada objek utama boleh dikompos. Jawab HANYA dalam format JSON tanpa markdown: {"nama":"nama objek dalam Bahasa Melayu","jenis":"ya/tidak/campur","sebab":"sebab ringkas"} - "ya" = boleh kompos (sisa makanan, buah, sayur, kulit telur, daun) - "tidak" = tak boleh kompos (plastik, tin, kaca, getah) - "campur" = sisa bercampur atau perlu diasingkan. Jika tiada objek jelas, jawab {"nama":"tiada","jenis":"tiada","sebab":"tiada objek"}';
   try{
-    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+DB.geminiKey,{
+    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','x-goog-api-key':DB.geminiKey},
       body:JSON.stringify({contents:[{parts:[{text:arahan},{inline_data:{mime_type:'image/jpeg',data:base64}}]}]})
     });
     const j=await res.json();
@@ -1415,7 +1443,13 @@ async function scanGemini(){
     paparKeputusanScan(hasil.nama+(hasil.sebab?' — '+hasil.sebab:''), hasil.jenis);
   }catch(err){
     console.error(err);
-    statusScan.textContent='⚠️ '+((err.message.includes('API')||err.message.includes('key'))?'API key salah atau kuota habis':'Ralat: '+err.message);
+    let pesanRalat='Ralat: '+err.message;
+    const m=(err.message||'').toLowerCase();
+    if(m.includes('api key not valid')||m.includes('api_key_invalid')) pesanRalat='API key tidak sah. Semak semula key di Tetapan.';
+    else if(m.includes('quota')||m.includes('rate')||m.includes('429')) pesanRalat='Kuota habis. Cuba lagi sebentar.';
+    else if(m.includes('not found')||m.includes('404')||m.includes('model')) pesanRalat='Model tidak tersedia. Perlu kemas kini app.';
+    else if(m.includes('permission')||m.includes('403')) pesanRalat='Key tiada kebenaran. Semak tetapan API di Google AI Studio.';
+    statusScan.textContent='⚠️ '+pesanRalat;
   }
   geminiSedangProses=false;
 }
