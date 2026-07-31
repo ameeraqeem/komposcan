@@ -220,6 +220,7 @@ nav button.aktif .material-symbols-rounded{font-variation-settings:'FILL' 1,'wgh
 .scanner video,.scanner img#imgUpload{width:100%;height:100%;object-fit:cover;display:block}
 .v-frame{position:absolute;inset:12%;border:2px solid rgba(255,255,255,.55);border-radius:20px;pointer-events:none;transition:border-color .3s ease,box-shadow .3s ease}
 .scanner.dikesan .v-frame{border-color:var(--green);box-shadow:0 0 0 3px rgba(52,199,89,.35)}
+.lencana-mod{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.55);color:#fff;font-size:12px;font-weight:600;padding:5px 12px;border-radius:100px;backdrop-filter:blur(8px);z-index:5}
 .v-status{
   position:absolute;left:50%;top:16px;transform:translateX(-50%);
   display:flex;align-items:center;gap:8px;max-width:88%;
@@ -509,6 +510,11 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
       <div class="caption">Kenal pasti sisa, selamatkan alam</div>
     </div>
 
+    <div class="kad">
+      <h2><span class="material-symbols-rounded">lightbulb</span>Tahukah Anda?</h2>
+      <p class="body" id="fakta" style="font-size:15px;line-height:1.5"></p>
+    </div>
+
     <div class="quick-scan" id="quickScan">
       <div class="qs-ikon"><span class="material-symbols-rounded">photo_camera</span></div>
       <div class="qs-teks"><b>Mula Scan</b><span>Kesan sisa makanan serta-merta</span></div>
@@ -555,11 +561,6 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
       <div class="caption" style="margin:16px 0 8px">Pecahan hasil scan</div>
       <div class="chart-box tinggi-2"><canvas id="cartaPie"></canvas></div>
     </div>
-
-    <div class="kad">
-      <h2><span class="material-symbols-rounded">lightbulb</span>Tahukah Anda?</h2>
-      <p class="body" id="fakta" style="font-size:15px;line-height:1.5"></p>
-    </div>
   </section>
 
   <!-- ═══════════ SCAN ═══════════ -->
@@ -569,6 +570,7 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
         <video id="video" autoplay playsinline muted></video>
         <img id="imgUpload" alt="Gambar dimuat naik" style="display:none">
         <div class="v-frame"></div>
+        <div class="lencana-mod" id="lencanaMod">AI KompoScan</div>
         <div class="v-status"><span class="titik-s" id="titik"></span><span id="statusScan">Model belum dimuatkan</span></div>
         <div class="v-yakin"><div id="barYakin"></div></div>
         <button class="v-tombol" id="btnPenuh" title="Skrin penuh" aria-label="Skrin penuh"><span class="material-symbols-rounded">fullscreen</span></button>
@@ -633,7 +635,7 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
     </div>
     <div class="kad">
       <h2><span class="material-symbols-rounded">description</span>Laporan Sekolah</h2>
-      <p class="caption" style="margin-bottom:14px">Muat turun laporan lengkap Excel — ringkasan, batch, bahan &amp; scan harian.</p>
+      <p class="caption" style="margin-bottom:14px">Muat turun laporan lengkap Excel yang mengandungi ringkasan, batch, bahan dan scan harian.</p>
       <button class="btn btn-green btn-penuh" id="btnExcel"><span class="material-symbols-rounded">download</span>Eksport Laporan Excel</button>
     </div>
   </section>
@@ -678,7 +680,7 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
             <div class="tut-no">3</div>
             <div class="tut-teks">
               <b>Masukkan sisa (scan dahulu!)</b>
-              <p>Scan sisa makanan di kiosk. Yang hijau (boleh kompos) — potong kecil, benam ke tengah timbunan. Sisa hijau kaya nitrogen.</p>
+              <p>Scan sisa makanan di kiosk. Yang hijau bermakna boleh kompos. Potong kecil, benam ke tengah timbunan. Sisa hijau kaya nitrogen.</p>
             </div>
           </div>
           <div class="tut-langkah">
@@ -699,7 +701,7 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
             <div class="tut-no">6</div>
             <div class="tut-teks">
               <b>Pantau &amp; tunggu matang</b>
-              <p>Rekod suhu &amp; berat dalam app. Dalam 4–8 minggu, kompos bertukar coklat gelap &amp; berbau tanah — tanda ia sedia dituai!</p>
+              <p>Rekod suhu &amp; berat dalam app. Dalam 4 hingga 8 minggu, kompos bertukar coklat gelap dan berbau tanah. Itu tanda ia sedia dituai!</p>
             </div>
           </div>
         </div>
@@ -729,36 +731,36 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
     <div class="seg-isi" id="seg-sains">
       <div class="kad">
         <h2><span class="material-symbols-rounded">biotech</span>Siapa Buat Kompos? Mikrob!</h2>
-        <p class="body" style="font-size:15px;line-height:1.5;margin-bottom:14px">Kompos sebenarnya kerja <b>mikrob</b> — organisma sangat halus (bakteria &amp; kulat) yang tak nampak dengan mata. Merekalah "pekerja" yang makan dan mengurai sisa makanan menjadi baja.</p>
-        <div class="info-blok"><b>Dari mana mikrob datang?</b><br>Mikrob wujud secara semula jadi — pada sisa makanan, dalam tanah, pada daun kering, dan di udara. Anda tak perlu beli! Cukup sediakan keadaan betul, mereka datang &amp; membiak sendiri.</div>
+        <p class="body" style="font-size:15px;line-height:1.5;margin-bottom:14px">Kompos sebenarnya kerja <b>mikrob</b>, iaitu organisma sangat halus seperti bakteria dan kulat yang tak nampak dengan mata. Merekalah pekerja yang makan dan mengurai sisa makanan menjadi baja.</p>
+        <div class="info-blok"><b>Dari mana mikrob datang?</b><br>Mikrob wujud secara semula jadi pada sisa makanan, dalam tanah, pada daun kering, dan di udara. Anda tak perlu beli. Cukup sediakan keadaan yang betul, mereka akan datang dan membiak sendiri.</div>
         <div class="info-blok" style="margin-top:12px"><b>Nak percepat?</b> Tambah segenggam kompos lama atau tanah kebun sebagai "benih" mikrob (pilihan sahaja).</div>
       </div>
 
       <div class="kad">
         <h2><span class="material-symbols-rounded">device_thermostat</span>Kenapa Suhu Penting?</h2>
-        <p class="body" style="font-size:15px;line-height:1.5;margin-bottom:12px">Bila mikrob bekerja kuat, mereka hasilkan <b>haba</b> — sama macam kita bersenam badan jadi panas. Jadi suhu memberitahu sama ada mikrob aktif atau tidak.</p>
+        <p class="body" style="font-size:15px;line-height:1.5;margin-bottom:12px">Bila mikrob bekerja kuat, mereka hasilkan <b>haba</b>, sama macam kita bersenam sampai badan jadi panas. Jadi suhu memberitahu kita sama ada mikrob aktif atau tidak.</p>
         <div class="senarai-semak">
           <div class="ss-item"><span class="material-symbols-rounded warn">ac_unit</span><span><b>Bawah 35°C:</b> mikrob malas / kurang. Tambah bahan hijau &amp; kacau.</span></div>
           <div class="ss-item"><span class="material-symbols-rounded ok">check_circle</span><span><b>40–65°C:</b> mikrob bekerja kuat! Benih rumpai &amp; kuman mati. Inilah sasaran.</span></div>
           <div class="ss-item"><span class="material-symbols-rounded warn">local_fire_department</span><span><b>Atas 70°C:</b> terlalu panas, mikrob baik pun mati. Kacau &amp; renjis air.</span></div>
         </div>
-        <div class="info-blok" style="margin-top:14px">💡 Suhu ibarat <b>"nadi"</b> kompos — macam doktor periksa nadi pesakit, sensor periksa "nadi" kompos.</div>
+        <div class="info-blok" style="margin-top:14px">💡 Suhu ibarat <b>nadi</b> kompos. Macam doktor periksa nadi pesakit, sensor pula periksa nadi kompos.</div>
       </div>
 
       <div class="kad">
         <h2><span class="material-symbols-rounded">water_drop</span>Kenapa Kelembapan Penting?</h2>
-        <p class="body" style="font-size:15px;line-height:1.5;margin-bottom:12px">Mikrob ialah benda hidup — mereka perlukan <b>air</b> untuk hidup. Macam manusia perlu minum, mikrob mati kalau kekeringan, tapi "lemas" kalau terlalu basah.</p>
+        <p class="body" style="font-size:15px;line-height:1.5;margin-bottom:12px">Mikrob ialah benda hidup yang perlukan <b>air</b> untuk terus hidup. Macam manusia perlu minum, mikrob akan mati kalau kekeringan, tapi lemas kalau terlalu basah.</p>
         <div class="senarai-semak">
           <div class="ss-item"><span class="material-symbols-rounded warn">grass</span><span><b>Bawah 40%:</b> terlalu kering, mikrob kehausan. Renjis air.</span></div>
-          <div class="ss-item"><span class="material-symbols-rounded ok">check_circle</span><span><b>50–60%:</b> sempurna — lembap macam span diperah.</span></div>
+          <div class="ss-item"><span class="material-symbols-rounded ok">check_circle</span><span><b>50 hingga 60 peratus:</b> sempurna, lembap macam span yang diperah.</span></div>
           <div class="ss-item"><span class="material-symbols-rounded warn">flood</span><span><b>Atas 70%:</b> terlalu basah, udara tak masuk → mikrob jahat ambil alih → BUSUK. Tambah bahan perang.</span></div>
         </div>
-        <div class="info-blok" style="margin-top:14px">💡 Kelembapan ialah <b>"minuman"</b> mikrob — pastikan mereka ada air cukup untuk hidup &amp; bekerja.</div>
+        <div class="info-blok" style="margin-top:14px">💡 Kelembapan ialah <b>minuman</b> mikrob. Pastikan mereka ada air yang cukup untuk hidup dan bekerja.</div>
       </div>
 
       <div class="kad">
         <h2><span class="material-symbols-rounded">scale</span>Kenapa Timbang Berat?</h2>
-        <p class="body" style="font-size:15px;line-height:1.5;margin-bottom:12px">Load cell mengukur <b>berat sebenar</b> sisa yang dikitar — bukan sekadar anggaran. Ini memberi bukti kukuh untuk projek.</p>
+        <p class="body" style="font-size:15px;line-height:1.5;margin-bottom:12px">Load cell mengukur <b>berat sebenar</b> sisa yang dikitar, bukan sekadar anggaran. Ini memberi bukti yang kukuh untuk projek.</p>
         <div class="senarai-semak">
           <div class="ss-item"><span class="material-symbols-rounded ok">verified</span><span><b>Bukti sebenar:</b> "42 kg dikitar" boleh disahkan, bukan teka</span></div>
           <div class="ss-item"><span class="material-symbols-rounded ok">bar_chart</span><span><b>Data dashboard:</b> carta terisi dengan berat sebenar</span></div>
@@ -768,7 +770,7 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
 
       <div class="kad" style="background:var(--green);color:#fff">
         <h2 style="color:#fff"><span class="material-symbols-rounded" style="color:#fff">lightbulb</span>Rumusan Sains KompoScan</h2>
-        <p style="font-size:15px;line-height:1.55;color:#fff">Kompos ialah kerja berjuta mikrob yang mengurai sisa. <b>Sensor suhu</b> beritahu mikrob sedang bekerja, <b>sensor kelembapan</b> pastikan mereka ada air, dan <b>load cell</b> mengukur berat sebenar yang dikitar — memberi bukti impak yang boleh disahkan.</p>
+        <p style="font-size:15px;line-height:1.55;color:#fff">Kompos ialah kerja berjuta mikrob yang mengurai sisa. <b>Sensor suhu</b> beritahu mikrob sedang bekerja, <b>sensor kelembapan</b> pastikan mereka ada air, dan <b>load cell</b> mengukur berat sebenar yang dikitar untuk memberi bukti impak yang boleh disahkan.</p>
       </div>
     </div>
 
@@ -841,7 +843,7 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
         <div class="senarai-semak">
           <div class="ss-item"><span class="material-symbols-rounded ok">palette</span><span>Warna coklat gelap kehitaman</span></div>
           <div class="ss-item"><span class="material-symbols-rounded ok">forest</span><span>Berbau tanah hutan yang wangi (bukan busuk)</span></div>
-          <div class="ss-item"><span class="material-symbols-rounded ok">blur_on</span><span>Bahan asal tak dikenali lagi — gebur &amp; halus</span></div>
+          <div class="ss-item"><span class="material-symbols-rounded ok">blur_on</span><span>Bahan asal tak dikenali lagi, sudah gebur dan halus</span></div>
         </div>
       </div>
 
@@ -862,7 +864,7 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
           <div class="guna-item"><span class="material-symbols-rounded">grass</span><div><b>Batas sayur</b><p>Gaul 1 baldi kompos semeter persegi sebelum menanam</p></div></div>
           <div class="guna-item"><span class="material-symbols-rounded">spa</span><div><b>Semaian benih</b><p>Ayak halus, campur 1:1 dengan tanah</p></div></div>
         </div>
-        <div class="info-blok" style="margin-top:14px">Kompos tidak "membakar" pokok seperti baja kimia — selamat digunakan dengan lebih banyak. 🌱</div>
+        <div class="info-blok" style="margin-top:14px">Kompos tidak membakar pokok seperti baja kimia, jadi selamat digunakan dengan lebih banyak. 🌱</div>
       </div>
     </div>
 
@@ -894,7 +896,7 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
         <h2><span class="material-symbols-rounded">safety_check</span>Keselamatan Murid</h2>
         <div class="senarai-semak">
           <div class="ss-item"><span class="material-symbols-rounded ok">check_circle</span><span>Pakai sarung tangan getah</span></div>
-          <div class="ss-item"><span class="material-symbols-rounded ok">check_circle</span><span>Basuh tangan dengan sabun selepas — wajib</span></div>
+          <div class="ss-item"><span class="material-symbols-rounded ok">check_circle</span><span>Basuh tangan dengan sabun selepas mengendalikan kompos. Ini wajib</span></div>
           <div class="ss-item"><span class="material-symbols-rounded ok">check_circle</span><span>Jangan hidu debu kompos kering dalam-dalam</span></div>
           <div class="ss-item"><span class="material-symbols-rounded ok">check_circle</span><span>Ada luka di tangan? Jangan pegang kompos hari itu</span></div>
         </div>
@@ -921,7 +923,22 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
       
 
       <div class="kad">
-        <h2><span class="material-symbols-rounded">smart_toy</span>Model AI</h2>
+        <h2><span class="material-symbols-rounded">auto_awesome</span>AI Pintar (Gemini)</h2>
+        <label>Mod Scan</label>
+        <select id="modAI" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);font-size:15px;margin-bottom:12px">
+          <option value="gemini">🌟 Gemini — Pintar, tak perlu latih (disyorkan)</option>
+          <option value="tm">🎓 Teachable Machine — Mod latihan sendiri</option>
+        </select>
+        <label>Gemini API Key</label>
+        <input type="password" id="geminiKey" placeholder="AIzaSy...">
+        <div class="info-nota">
+          Dapatkan key percuma di <b>aistudio.google.com</b> → Get API key.<br>
+          Gemini kenal makanan terus tanpa perlu latih. Perlu internet.
+        </div>
+      </div>
+
+      <div class="kad">
+        <h2><span class="material-symbols-rounded">smart_toy</span>Model AI (Mod Latihan)</h2>
         <label>URL model Teachable Machine</label>
         <input type="text" id="urlTM" placeholder="https://teachablemachine.withgoogle.com/models/xxxxx/">
         <div class="info-nota">
@@ -939,7 +956,7 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
       <div class="kad">
         <h2><span class="material-symbols-rounded">tune</span>Tambah Data / Latih Model</h2>
         <p class="caption" style="margin-bottom:12px">Buka Teachable Machine untuk tambah gambar &amp; latih semula model. Ingat: selepas train, tekan "Update my cloud model" supaya semua peranti dapat versi baharu.</p>
-        <label>URL projek TM anda (dari Drive — pilihan)</label>
+        <label>URL projek TM anda (dari Drive, pilihan)</label>
         <input type="text" id="urlTMprojek" placeholder="Tampal link projek .tm dari Google Drive">
         <button class="btn btn-green btn-penuh" style="margin-top:12px" id="btnBukaTM"><span class="material-symbols-rounded">open_in_new</span>Buka Teachable Machine</button>
         <button class="btn btn-sec btn-penuh" style="margin-top:10px" id="btnBukaTMbaru"><span class="material-symbols-rounded">add_photo_alternate</span>Projek TM Baharu</button>
@@ -953,7 +970,7 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
         <div class="info-nota">Data batch, bahan &amp; scan disimpan terus ke Google Sheets anda.</div>
         <button class="btn btn-green btn-penuh" style="margin-top:16px" id="btnSimpanGAS"><span class="material-symbols-rounded">save</span>Simpan URL Database</button>
         <button class="btn btn-sec btn-penuh" style="margin-top:10px" id="btnSegerak"><span class="material-symbols-rounded">sync</span>Segerak Data Sekarang</button>
-        <label>URL Google Sheets (untuk lihat data — pilihan)</label>
+        <label>URL Google Sheets (untuk lihat data, pilihan)</label>
         <input type="text" id="urlSheet" placeholder="https://docs.google.com/spreadsheets/d/....">
         <button class="btn btn-sec btn-penuh" style="margin-top:10px" id="btnBukaSheet"><span class="material-symbols-rounded">table_view</span>Buka Google Sheets</button>
       </div>
@@ -1024,7 +1041,7 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
   <h3 style="text-align:left;margin-bottom:14px"><span class="material-symbols-rounded" style="vertical-align:-5px;color:var(--green)">device_thermostat</span> Rekod Bacaan Tong</h3>
   <label>Suhu timbunan (°C)</label>
   <input type="number" id="sensorSuhu" step="0.1" placeholder="Contoh: 48">
-  <label>Kelembapan (%) — pilihan</label>
+  <label>Kelembapan (%), pilihan</label>
   <input type="number" id="sensorLembapan" step="1" min="0" max="100" placeholder="Contoh: 55">
   <button class="btn btn-green btn-penuh" style="margin-top:16px" id="btnSimpanSensor"><span class="material-symbols-rounded">save</span>Simpan Bacaan</button>
   <button class="btn btn-sec btn-penuh" style="margin-top:10px" id="btnSensorTutup">Tutup</button>
@@ -1081,7 +1098,7 @@ const storan = {
    memuatkannya secara automatik tanpa perlu tetapan di setiap device */
 const URL_TM_LALAI = "https://teachablemachine.withgoogle.com/models/Ips1IVVZ5/";
 
-let DB = { batches:[], stat:{totalKg:0,kompos:0,tong:0,scanIkutTarikh:{}}, urlTM:URL_TM_LALAI, ambang:0.85, pin:btoa('1234'), urlGAS:'https://script.google.com/macros/s/AKfycbzaY2o9BPRCs4gvBsb3Lb6kbwDoWBRGwEdwFbQg_U44yPvhziJUkRJ0P9OFGyZH0tuC/exec', sensor:{} };
+let DB = { batches:[], stat:{totalKg:0,kompos:0,tong:0,scanIkutTarikh:{}}, urlTM:URL_TM_LALAI, ambang:0.85, pin:btoa('1234'), urlGAS:'https://script.google.com/macros/s/AKfycbzaY2o9BPRCs4gvBsb3Lb6kbwDoWBRGwEdwFbQg_U44yPvhziJUkRJ0P9OFGyZH0tuC/exec', sensor:{}, modAI:'gemini', geminiKey:'' };
 try{ const d=storan.get('komposcan'); if(d) DB = Object.assign(DB, JSON.parse(d)); }catch(e){}
 DB.sensor = DB.sensor || {};
 if(!DB.urlTM) DB.urlTM = URL_TM_LALAI;  // guna URL benam kalau tersimpan kosong
@@ -1140,11 +1157,11 @@ const ILMU = {
   'uncang teh':{kat:'hijau',reput:'2-4 minggu',tip:'Buang kokot/plastik dahulu. Daun teh memperbaiki struktur tanah.'},
   'hampas kelapa':{kat:'perang',reput:'2-4 bulan',tip:'Menyimpan lembapan dengan baik dan menambah karbon pada kompos.'},
   '_default_boleh':{kat:'hijau',reput:'2-6 minggu',tip:'Potong kecil-kecil supaya lebih cepat reput, dan gaul dengan bahan perang (daun kering) untuk elak bau.'},
-  '_plastik':{sebab:'Plastik tidak akan reput — ia kekal ratusan tahun dan mencemarkan baja.'},
+  '_plastik':{sebab:'Plastik tidak akan reput. Ia kekal ratusan tahun dan mencemarkan baja.'},
   '_polistirena':{sebab:'Polistirena tidak terurai dan bahan kimianya boleh meresap ke dalam tanah.'},
   '_tulang':{sebab:'Tulang sangat lambat reput dan menarik tikus serta haiwan liar ke tong kompos.'},
   '_daging':{sebab:'Daging/ayam/ikan berbau busuk semasa reput dan menarik lalat, ulat & tikus.'},
-  '_minyak':{sebab:'Makanan berminyak/bersantan menyalut bahan lain dan menghalang udara — kompos jadi busuk.'},
+  '_minyak':{sebab:'Makanan berminyak atau bersantan menyalut bahan lain dan menghalang udara, jadi kompos jadi busuk.'},
   '_tenusu':{sebab:'Susu, keju & tenusu cepat busuk, berbau kuat dan menarik perosak.'},
   '_default_tidak':{sebab:'Bahan ini tidak sesuai untuk kompos sekolah. Buang ke tong biasa ya!'}
 };
@@ -1165,12 +1182,12 @@ function cariIlmu(nama, boleh){
 }
 
 const FAKTA = [
-  'Hampir 1/3 makanan di dunia dibazirkan. Sisa makanan di tapak pelupusan menghasilkan gas metana — 25 kali lebih kuat daripada CO₂!',
+  'Hampir satu pertiga makanan di dunia dibazirkan. Sisa makanan di tapak pelupusan menghasilkan gas metana yang 25 kali lebih kuat daripada karbon dioksida!',
   'Satu tong kompos sekolah boleh mengurangkan sehingga 100 kg sisa makanan setahun daripada pergi ke tapak pelupusan.',
-  'Nisbah kompos yang baik: 1 bahagian bahan HIJAU (nitrogen) : 2-3 bahagian bahan PERANG (karbon).',
+  'Nisbah kompos yang baik ialah 1 bahagian bahan hijau (nitrogen) berbanding 2 hingga 3 bahagian bahan perang (karbon).',
   'Cacing tanah boleh makan sisa makanan sebanyak separuh berat badannya setiap hari!',
-  'Kompos yang siap berbau seperti tanah hutan — bukan busuk. Jika busuk, tambah bahan perang & kacau!',
-  'Kulit pisang kaya kalium — petani panggil ia "baja percuma" untuk pokok cili dan tomato.'
+  'Kompos yang siap berbau seperti tanah hutan, bukan busuk. Kalau busuk, tambah bahan perang dan kacau!',
+  'Kulit pisang kaya dengan kalium. Petani panggil ia baja percuma untuk pokok cili dan tomato.'
 ];
 
 /* ═══════════════ NAVIGASI ═══════════════ */
@@ -1249,21 +1266,32 @@ const notaScan=document.getElementById('notaScan');
 document.getElementById('urlTM').value = DB.urlTM||'';
 document.getElementById('ambang').value = DB.ambang;
 document.getElementById('urlGAS').value = DB.urlGAS||'';
-
+if(document.getElementById('modAI')) document.getElementById('modAI').value = DB.modAI||'gemini';
+if(document.getElementById('geminiKey')) document.getElementById('geminiKey').value = DB.geminiKey||'';
 document.getElementById('btnSimpanGAS').addEventListener('click',()=>{
   DB.urlGAS=document.getElementById('urlGAS').value.trim();
   simpan();
   if(DB.urlGAS){ toast('☁️ URL database disimpan!'); gasSegerak(true); }
-  else toast('URL database dikosongkan — data disimpan setempat sahaja.');
+  else toast('URL database dikosongkan. Data disimpan setempat sahaja.');
 });
 document.getElementById('btnSegerak').addEventListener('click',()=>gasSegerak(false));
 
 document.getElementById('btnSimpanTM').addEventListener('click', async ()=>{
   DB.urlTM = document.getElementById('urlTM').value.trim();
   DB.ambang = parseFloat(document.getElementById('ambang').value)||0.85;
+  DB.modAI = document.getElementById('modAI').value;
+  DB.geminiKey = document.getElementById('geminiKey').value.trim();
   simpan();
-  await muatModel();
+  kemaskiniLencanaMod();
+  if(DB.modAI==='tm') await muatModel();
+  else toast('✓ Tetapan disimpan! Tekan Mula Scan untuk guna.');
 });
+
+function kemaskiniLencanaMod(){
+  const l=document.getElementById('lencanaMod');
+  if(!l) return;
+  l.textContent = 'AI KompoScan';  // neutral — tak dedah teknologi belakang
+}
 
 async function muatModel(){
   if(!DB.urlTM){ statusScan.textContent='Model belum ditetapkan (pergi ke Tetapan)'; return false; }
@@ -1287,7 +1315,7 @@ document.getElementById('btnScan').addEventListener('click', async function(){
   if(scanning){ hentiScan(); return; }
   notaScan.style.display='none';
   imgUpload.style.display='none';
-  if(!model){ const ok=await muatModel(); if(!ok) return; }
+  if(DB.modAI!=="gemini" && !model){ const ok=await muatModel(); if(!ok) return; }
   if(!stream){
     try{
       // Cuba kamera belakang dulu (terbaik untuk scan)
@@ -1352,9 +1380,44 @@ document.addEventListener('keydown',e=>{
 
 async function gelung(){
   while(scanning){
-    try{ await ramal(); }catch(e){ console.error(e); }
-    await new Promise(r=>setTimeout(r,350));
+    try{
+      if(DB.modAI==='gemini'){ await scanGemini(); await new Promise(r=>setTimeout(r,2000)); }
+      else { await ramal(); await new Promise(r=>setTimeout(r,350)); }
+    }catch(e){ console.error(e); await new Promise(r=>setTimeout(r,500)); }
   }
+}
+
+// ═══ SCAN GUNA GEMINI (AI pintar, tak perlu latih) ═══
+let geminiSedangProses=false;
+async function scanGemini(){
+  if(geminiSedangProses || overlayAktif || video.videoWidth===0) return;
+  if(!DB.geminiKey){ toast('⚠️ Masukkan Gemini API key di Tetapan dahulu.'); return; }
+  geminiSedangProses=true;
+  statusScan.textContent='AI menganalisis...';
+  const kanvas=document.createElement('canvas');
+  kanvas.width=video.videoWidth; kanvas.height=video.videoHeight;
+  kanvas.getContext('2d').drawImage(video,0,0);
+  const base64=kanvas.toDataURL('image/jpeg',0.8).split(',')[1];
+  const arahan='Anda pakar kompos. Lihat gambar ini dan tentukan sama ada objek utama boleh dikompos. Jawab HANYA dalam format JSON tanpa markdown: {"nama":"nama objek dalam Bahasa Melayu","jenis":"ya/tidak/campur","sebab":"sebab ringkas"} - "ya" = boleh kompos (sisa makanan, buah, sayur, kulit telur, daun) - "tidak" = tak boleh kompos (plastik, tin, kaca, getah) - "campur" = sisa bercampur atau perlu diasingkan. Jika tiada objek jelas, jawab {"nama":"tiada","jenis":"tiada","sebab":"tiada objek"}';
+  try{
+    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+DB.geminiKey,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:arahan},{inline_data:{mime_type:'image/jpeg',data:base64}}]}]})
+    });
+    const j=await res.json();
+    if(j.error){ throw new Error(j.error.message||'Ralat Gemini'); }
+    let teks=(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts[0].text)||'';
+    teks=teks.replace(/```json|```/g,'').trim();
+    const hasil=JSON.parse(teks);
+    if(hasil.jenis==='tiada'){ statusScan.textContent='Halakan ke objek...'; geminiSedangProses=false; return; }
+    rekodScan(hasil.jenis, hasil.nama);
+    paparKeputusanScan(hasil.nama+(hasil.sebab?' — '+hasil.sebab:''), hasil.jenis);
+  }catch(err){
+    console.error(err);
+    statusScan.textContent='⚠️ '+((err.message.includes('API')||err.message.includes('key'))?'API key salah atau kuota habis':'Ralat: '+err.message);
+  }
+  geminiSedangProses=false;
 }
 
 async function ramal(){
@@ -1401,11 +1464,11 @@ function paparKeputusanScan(nama, jenis){
   const _ikon={ya:'check',campur:'swap_horiz',tidak:'close'}[jenis];
   ik.innerHTML='<span class="material-symbols-rounded">'+_ikon+'</span>';
   if(jenis==='ya'){
-    lb.innerHTML='<b>'+esc(nama)+'</b><small>Boleh kompos — masukkan ke tong kompos</small>';
+    lb.innerHTML='<b>'+esc(nama)+'</b><small>Boleh kompos, masukkan ke tong kompos</small>';
   }else if(jenis==='campur'){
     lb.innerHTML='<b>Sisa Bercampur</b><small>Asingkan dahulu: makanan ke satu bahagian, plastik/tulang ke bahagian lain — kemudian scan satu-satu.</small>';
   }else{
-    lb.innerHTML='<b>'+esc(nama)+'</b><small>Tidak boleh — buang ke tong biasa</small>';
+    lb.innerHTML='<b>'+esc(nama)+'</b><small>Tidak boleh, buang ke tong biasa</small>';
   }
   o.className='overlay-keputusan buka '+jenis;
   document.getElementById('scanner').classList.add('dikesan');
@@ -1444,7 +1507,7 @@ document.getElementById('failGambar').addEventListener('change', async e=>{
   const fail=e.target.files[0]; if(!fail) return;
   e.target.value='';
   notaScan.style.display='none';
-  if(!model){ const ok=await muatModel(); if(!ok) return; }
+  if(DB.modAI!=="gemini" && !model){ const ok=await muatModel(); if(!ok) return; }
   if(scanning) hentiScan();
   const url=URL.createObjectURL(fail);
   try{
@@ -1661,8 +1724,8 @@ function nasihatNisbah(n){
   if(n.jum===0) return null;
   if(n.pctH>=70) return {tahap:'bahaya',msg:'⚠️ '+n.pctH+'% bahan hijau — terlalu banyak! Tambah bahan perang (daun kering / kertas koyak) SEKARANG, jika tidak batch ini akan berbau.'};
   if(n.pctH>=55) return {tahap:'awas',msg:'🟡 '+n.pctH+'% bahan hijau — mula pincang. Tambah segenggam dua daun kering setiap kali masukkan sisa baharu.'};
-  if(n.pctH<=20 && n.jum>1) return {tahap:'awas',msg:'🟤 Terlalu banyak bahan perang — reput akan perlahan. Boleh tambah lebih sisa hijau.'};
-  return {tahap:'ok',msg:'✅ Nisbah hijau:perang seimbang — teruskan!'};
+  if(n.pctH<=20 && n.jum>1) return {tahap:'awas',msg:'🟤 Terlalu banyak bahan perang, jadi reput akan perlahan. Boleh tambah lebih sisa hijau.'};
+  return {tahap:'ok',msg:'✅ Nisbah hijau dan perang seimbang. Teruskan!'};
 }
 
 /* ═══════════════ NASIHAT SENSOR (suhu & lembapan) ═══════════════ */
@@ -1689,10 +1752,10 @@ function bukaPanduan(nama,kategori,b){
   const n=kiraNisbah(b), ns=nasihatNisbah(n);
   const langkah = kategori==='perang' ? [
     ['Gaul rata','Masukkan '+esc(nama)+' dan gaul dengan lapisan atas timbunan supaya sebati.'],
-    ['Semak lembapan','Kompos patut lembap seperti span diperah — jika kering, renjis sedikit air.'],
+    ['Semak lembapan','Kompos patut lembap seperti span diperah. Kalau kering, renjis sedikit air.'],
     ['Tutup tong','Tutup penutup tong; pastikan lubang udara tidak tersumbat.']
   ] : [
-    ['Potong kecil','Potong atau koyak '+esc(nama)+' kecil-kecil — lebih kecil, lebih cepat reput.'],
+    ['Potong kecil','Potong atau koyak '+esc(nama)+' kecil-kecil. Lebih kecil, lebih cepat ia reput.'],
     ['Korek & benam','Korek lubang di tengah timbunan dan benamkan sisa ke dalam.'],
     ['Selimut perang','Tutup sisa dengan 2 genggam bahan perang (daun kering / kertas koyak). Ini rahsia elak bau & lalat!'],
     ['Tutup tong','Tutup penutup tong rapat. Kacau menyeluruh cukup seminggu sekali.']
@@ -2187,7 +2250,7 @@ const BOT_KB=[
   j:()=>'⚖️ Setakat ini program KompoScan telah mengitar <b>'+DB.stat.totalKg.toFixed(2)+' kg</b> sisa makanan menjadi baja! Itu '+DB.stat.totalKg.toFixed(2)+' kg yang TIDAK pergi ke tapak pelupusan. Syabas! 🎉'},
 
  {k:['terima kasih','tq','thanks','tqvm'],
-  j:'Sama-sama! 🪱💚 Jumpa lagi — dan jangan lupa selimut perang atas sisa baharu ya!'},
+  j:'Sama-sama! 🪱💚 Jumpa lagi, dan jangan lupa selimut perang atas sisa baharu ya!'},
 ];
 
 function botJawab(soalan){
@@ -2214,7 +2277,7 @@ function semakMakananBot(t){
       return '✅ <b>'+k.charAt(0).toUpperCase()+k.slice(1)+'</b> BOLEH dikompos! '+(il.kat==='hijau'?'🟢 Bahan hijau (nitrogen)':'🟤 Bahan perang (karbon)')+' — reput dalam '+il.reput+'.<br><br>💡 '+il.tip;
     }
   }
-  if(t.includes('nasi')) { const il=ILMU['sisa nasi']; return '✅ <b>Nasi</b> BOLEH dikompos — tapi sedikit sahaja. 💡 '+il.tip; }
+  if(t.includes('nasi')) { const il=ILMU['sisa nasi']; return '✅ <b>Nasi</b> boleh dikompos, tapi sedikit sahaja. 💡 '+il.tip; }
   return null;
 }
 
