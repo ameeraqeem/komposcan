@@ -2264,8 +2264,8 @@ function tambahBuih(jenis,html){
 paparDashboard(); paparBatch();
 if(DB.urlTM) muatModel();
 if(DB.urlGAS) gasSegerak(true);
-// Auto-segerak dari Sheets setiap 30 saat (untuk papar bacaan sensor dari Python/USB)
-setInterval(()=>{ if(DB.urlGAS && document.getElementById('hal-utama').classList.contains('aktif')) gasSegerak(true); }, 30000);
+// Auto-segerak dari Sheets setiap 15 saat (untuk papar bacaan LIVE dari Python/USB)
+setInterval(()=>{ if(DB.urlGAS && document.getElementById('hal-utama').classList.contains('aktif')) gasSegerak(true); }, 15000);
 
 /* ═══════════════ LAMPIRAN UI APPLE (tambahan, tidak ubah logik teras) ═══════════════ */
 (function(){
