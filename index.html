@@ -1149,7 +1149,10 @@ async function gasSegerak(senyap){
         .map(x=>({nama:String(x.nama||''),berat:parseFloat(x.berat)||0,tarikh:String(x.tarikh).slice(0,10),kategori:String(x.kategori||'hijau')}))
     }));
     DB.stat.totalKg=DB.batches.reduce((s,b)=>s+b.bahan.reduce((t,x)=>t+x.berat,0),0);
-    // Muat bacaan sensor terkini dari Sheets (untuk cara Python/USB) → papar live
+    simpan(); paparBatch(); paparDashboard();
+    isiPilihanBatch(document.getElementById('pilihBatchTimbang'));
+    // Muat bacaan sensor terkini dari Sheets (Python/USB) → papar live
+    // PENTING: panggil SELEPAS paparDashboard supaya tak ditimpa monitor kosong
     if(j.sensor && j.sensor.suhu!=='' && j.sensor.suhu!=null){
       const s=parseFloat(j.sensor.suhu), l=parseFloat(j.sensor.lembapan);
       if(!isNaN(s)||!isNaN(l)){
@@ -1157,8 +1160,6 @@ async function gasSegerak(senyap){
         paparSensorLive();
       }
     }
-    simpan(); paparBatch(); paparDashboard();
-    isiPilihanBatch(document.getElementById('pilihBatchTimbang'));
     if(!senyap) toast('☁️ Data disegerak dari Google Sheets!');
   }catch(err){
     console.error(err);
