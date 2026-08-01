@@ -56,6 +56,7 @@ body{
   background:var(--bg);
   color:var(--t1);
   min-height:100vh;
+  overflow-x:hidden;
   padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px);
   line-height:1.47;
   letter-spacing:-.01em;
@@ -92,7 +93,7 @@ header .ikon-btn{
 header .ikon-btn:active{transform:scale(.92)}
 header .ikon-btn .material-symbols-rounded{font-size:20px}
 
-main{max-width:540px;margin:0 auto;padding:20px 16px 0}
+main{max-width:540px;margin:0 auto;padding:20px 16px 0;overflow-x:clip}
 
 /* ═══ HALAMAN ═══ */
 .halaman{display:none;flex-direction:column;gap:16px}
@@ -205,8 +206,8 @@ nav button.aktif .material-symbols-rounded{font-variation-settings:'FILL' 1,'wgh
 .sensor-bacaan.merah .sb-nilai{color:var(--red)}
 .sensor-tarikh{font-size:11px;color:var(--t2);text-align:center;margin-top:10px}
 .monitor-kosong{padding:4px 0}
-.mk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.mk-item{background:var(--fill);border-radius:14px;padding:16px;text-align:center}
+.mk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
+.mk-item{background:var(--fill);border-radius:14px;padding:16px;text-align:center;min-width:0;overflow:hidden}
 .mk-item .material-symbols-rounded{font-size:26px;color:var(--t2)}
 .mk-label{font-size:12px;color:var(--t2);margin-top:4px}
 .mk-nilai{font-size:26px;font-weight:700;color:var(--t2);margin-top:2px}
@@ -373,8 +374,8 @@ body.skrin-penuh{overflow:hidden}
 .fab{position:fixed;right:16px;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 20px);z-index:70;width:56px;height:56px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(52,199,89,.4)}
 .fab .material-symbols-rounded{font-size:26px}
 .fab:active{transform:scale(.92)}
-.chat-panel{position:fixed;left:0;right:0;bottom:0;z-index:115;max-width:540px;margin:0 auto;height:min(80vh,660px);background:var(--card);border-radius:var(--r-modal) var(--r-modal) 0 0;box-shadow:0 -8px 40px rgba(0,0,0,.18);transform:translateY(105%);transition:transform .35s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column}
-.chat-panel.buka{transform:none}
+.chat-panel{position:fixed;left:0;right:0;bottom:0;z-index:115;max-width:540px;margin:0 auto;height:min(80vh,660px);background:var(--card);border-radius:var(--r-modal) var(--r-modal) 0 0;box-shadow:0 -8px 40px rgba(0,0,0,.18);transform:translateY(105%);transition:transform .35s cubic-bezier(.32,.72,0,1),visibility .35s;display:flex;flex-direction:column;overflow:hidden;visibility:hidden}
+.chat-panel.buka{transform:none;visibility:visible}
 .chat-kepala{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:.5px solid var(--border)}
 .chat-kepala .mask{width:40px;height:40px;border-radius:50%;background:rgba(52,199,89,.14);display:flex;align-items:center;justify-content:center}
 .chat-kepala .mask .material-symbols-rounded{font-size:22px;color:var(--green)}
@@ -386,7 +387,8 @@ body.skrin-penuh{overflow:hidden}
 .buih{max-width:82%;padding:11px 15px;border-radius:18px;font-size:15px;line-height:1.5}
 .buih.bot{background:var(--fill);align-self:flex-start;border-bottom-left-radius:5px}
 .buih.user{background:var(--green);color:#fff;align-self:flex-end;border-bottom-right-radius:5px}
-.chip-baris{display:flex;gap:8px;overflow-x:auto;padding:10px 16px;border-top:.5px solid var(--border);scrollbar-width:none}
+.chip-baris{display:none;gap:8px;overflow-x:auto;padding:10px 16px;border-top:.5px solid var(--border);scrollbar-width:none;width:100%;box-sizing:border-box;min-width:0}
+.chat-panel.buka .chip-baris{display:flex}
 .chip-baris::-webkit-scrollbar{display:none}
 .chip-soalan{flex:0 0 auto;background:var(--fill);color:var(--t1);font-size:13px;font-weight:500;border-radius:100px;padding:8px 14px}
 .chat-input{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:.5px solid var(--border)}
@@ -1128,7 +1130,7 @@ footer{max-width:540px;margin:20px auto 0;text-align:center;font-size:12px;color
   <button data-hal="tetapan"><span class="material-symbols-rounded">settings</span>Tetapan</button>
 </nav>
 
-<footer>AI KompoScan · SK Bayas, Langkawi · Program Go Green</footer>
+<footer>AI KompoScan · SK Bayas, Langkawi · © 2026</footer>
 
 <script>
 
@@ -2034,7 +2036,7 @@ document.getElementById('btnExcel').addEventListener('click',()=>{
     .reduce((s,b)=>s+b.bahan.reduce((t,x)=>t+x.berat,0),0);
   const r=[
     ["LAPORAN PROGRAM KOMPOSCAN"],
-    ["Sekolah Kebangsaan Bayas · Program Go Green"],
+    ["Sekolah Kebangsaan Bayas, Langkawi"],
     ["Kenal Pasti Sisa, Selamatkan Alam"],
     [],
     ["Tarikh laporan dijana", formatT(hariIni)],
