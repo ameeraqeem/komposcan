@@ -201,6 +201,8 @@ nav button.aktif .material-symbols-rounded{font-variation-settings:'FILL' 1,'wgh
 .titik-tunggu{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--oren);animation:kelipLive 1.2s infinite;margin-right:4px;vertical-align:middle}
 .lencana-live{display:inline-flex;align-items:center;gap:5px;background:rgba(255,59,48,.12);color:var(--red);font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px;margin-left:6px;letter-spacing:.05em}
 .titik-live{width:7px;height:7px;border-radius:50%;background:var(--red);animation:kelipLive 1.2s infinite}
+.lencana-offline{display:inline-flex;align-items:center;gap:5px;background:rgba(142,142,147,.15);color:#8e8e93;font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px;margin-left:6px;letter-spacing:.05em}
+.titik-offline{width:7px;height:7px;border-radius:50%;background:#8e8e93}
 @keyframes kelipLive{0%,100%{opacity:1}50%{opacity:.3}}
 .btn-hantar-manual{background:var(--green);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;margin-top:2px}
 .btn-hantar-manual:active{transform:scale(.97)}
@@ -1156,7 +1158,9 @@ async function gasSegerak(senyap){
     if(j.sensor && j.sensor.suhu!=='' && j.sensor.suhu!=null){
       const s=parseFloat(j.sensor.suhu), l=parseFloat(j.sensor.lembapan);
       if(!isNaN(s)||!isNaN(l)){
-        sensorLive={suhu:isNaN(s)?null:s, lembapan:isNaN(l)?null:l, masa:Date.now()};
+        // Guna masa SEBENAR bacaan dari Sheets (untuk kesan data lama)
+        const masaBacaan = j.sensor.masa ? new Date(j.sensor.masa).getTime() : Date.now();
+        sensorLive={suhu:isNaN(s)?null:s, lembapan:isNaN(l)?null:l, masa:masaBacaan};
         paparSensorLive();
       }
     }
@@ -2130,7 +2134,17 @@ function paparSensorLive(){
     const sl=statusLembap(l);
     sel+=`<div class="sensor-bacaan ${sl.kelas}"><div class="sb-label"><span class="material-symbols-rounded">water_drop</span>Lembapan</div><div class="sb-nilai">${Math.round(l)}%</div><div class="sb-status ${sl.status}"><span class="titik"></span>${sl.teks}</div></div>`;
   }
-  wrap.innerHTML=`<div class="sensor-batch"><div class="sb-nama"><span class="material-symbols-rounded">compost</span>${esc(nama)} <span class="lencana-live"><span class="titik-live"></span>LIVE</span></div><div class="sensor-grid">${sel}</div><div class="sensor-tarikh">Dikemas kini: ${new Date(sensorLive.masa).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'})} · <button class="btn-hantar-manual" onclick="hantarSensorManual()">Hantar ke Sheet sekarang</button></div></div>`;
+  // Kira umur bacaan — segar (LIVE) atau lama (OFFLINE)
+  const umur = Date.now() - sensorLive.masa;  // ms sejak bacaan
+  const OFFLINE_HAD = 2*60*1000;  // 2 minit
+  const lama = umur > OFFLINE_HAD;
+  const lencana = lama
+    ? `<span class="lencana-offline"><span class="titik-offline"></span>OFFLINE</span>`
+    : `<span class="lencana-live"><span class="titik-live"></span>LIVE</span>`;
+  const notaMasa = lama
+    ? `Bacaan terakhir: ${new Date(sensorLive.masa).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'})} (sensor mungkin tidak aktif)`
+    : `Dikemas kini: ${new Date(sensorLive.masa).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'})} · <button class="btn-hantar-manual" onclick="hantarSensorManual()">Hantar ke Sheet sekarang</button>`;
+  wrap.innerHTML=`<div class="sensor-batch"><div class="sb-nama"><span class="material-symbols-rounded">compost</span>${esc(nama)} ${lencana}</div><div class="sensor-grid">${sel}</div><div class="sensor-tarikh">${notaMasa}</div></div>`;
   const bs=document.getElementById('sensorMenunggu'); if(bs) bs.style.display='none';
   kad.style.display='block';
 }
